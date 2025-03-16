@@ -79,7 +79,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting )
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting wd)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -146,3 +146,6 @@ eval "$(fnm env --use-on-cd --shell zsh)"
 
 # Load Angular CLI autocompletion.
 source <(ng completion script)
+wd() {
+  . /Users/victorinolavida/bin/wd/wd.sh
+}
