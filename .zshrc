@@ -149,3 +149,11 @@ source <(ng completion script)
 wd() {
   . /Users/victorinolavida/bin/wd/wd.sh
 }
+export GOPATH=$HOME/go
+export PATH=$PATH:$HOME/go/bin
+export PATH="/usr/local/bin:$PATH"
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=(/Users/victorinolavida/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
+# End of Docker CLI completions
