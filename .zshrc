@@ -157,3 +157,7 @@ fpath=(/Users/victorinolavida/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 # End of Docker CLI completions
+export PATH="/Users/victorinolavida/.config/herd-lite/bin:$PATH"
+export PHP_INI_SCAN_DIR="/Users/victorinolavida/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
+
+#brew install --cask ghostty
