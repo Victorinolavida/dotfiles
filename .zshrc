@@ -161,3 +161,6 @@ export PATH="/Users/victorinolavida/.config/herd-lite/bin:$PATH"
 export PHP_INI_SCAN_DIR="/Users/victorinolavida/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
 
 #brew install --cask ghostty
+# connect to droplet
+alias droplet="ssh -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7"
+alias viclavida="ssh -t  -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7 ./magic.sh"

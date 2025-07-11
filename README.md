@@ -87,3 +87,6 @@ git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git ${ZS
 - zsh-autocomplete plugin
 
 git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZSH_CUSTOM/plugins/zsh-autocomplete
+
+mkdir -r ~/.config/aerospace
+ln -s .aerospace.toml ~/.config/.aerospace.toml
