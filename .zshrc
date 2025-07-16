@@ -172,6 +172,6 @@ bindkey -s ^f "tmux-sessionizer\n"
 bindkey -s ^F "tmux-session-finder\n"
 
 # Change to Ctrl+H:
-bindkey '^H' fzf-history-widget
+bindkey '^G' fzf-history-widget
 bindkey -r '^r'
 
