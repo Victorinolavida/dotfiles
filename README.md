@@ -90,3 +90,7 @@ git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZS
 
 mkdir -r ~/.config/aerospace
 ln -s .aerospace.toml ~/.config/.aerospace.toml
+
+##ranger
+
+ranger --copy-config=all

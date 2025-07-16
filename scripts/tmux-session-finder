@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Get all tmux sessions, strip trailing ':' from the session name.
+session=$(tmux list-sessions -F "#{session_name}" | fzf --prompt="Switch to session: ")
+
+if [[ -z $session ]]; then
+  echo "No session selected."
+  exit 0
+fi
+
+# If inside tmux, switch client. Otherwise, attach.
+if [[ -n $TMUX ]]; then
+  tmux switch-client -t "$session"
+else
+  tmux attach-session -t "$session"
+fi
+
