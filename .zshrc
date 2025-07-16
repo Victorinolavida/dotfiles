@@ -166,3 +166,12 @@ alias droplet="ssh -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7"
 alias viclavida="ssh -t  -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7 ./magic.sh"
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
+
+PATH="$PATH":"$HOME/.config/tmux/scripts/"
+bindkey -s ^f "tmux-sessionizer\n"
+bindkey -s ^F "tmux-session-finder\n"
+
+# Change to Ctrl+H:
+bindkey '^H' fzf-history-widget
+bindkey -r '^r'
+
