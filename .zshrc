@@ -168,10 +168,12 @@ alias viclavida="ssh -t  -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7 .
 source <(fzf --zsh)
 
 PATH="$PATH":"$HOME/.config/tmux/scripts/"
-bindkey -s ^f "tmux-sessionizer\n"
-bindkey -s ^F "tmux-session-finder\n"
+# bindkey -s ^f "tmux-sessionizer\n"
+bindkey -s ^o "tmux-sessionizer\n"
+# bindkey -s ^F "tmux-session-finder\n"
 
 # Change to Ctrl+H:
-bindkey '^G' fzf-history-widget
-bindkey -r '^r'
+# bindkey '^G' fzf-history-widget
+# bindkey -r '^r'
+export PATH="$HOME/.emacs.d/bin:$PATH"
 
