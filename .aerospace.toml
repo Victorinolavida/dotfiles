@@ -144,7 +144,7 @@ automatically-unhide-macos-hidden-apps = false
     alt-shift-comma = 'mode service'
 
     alt-shift-enter = 'mode apps'
-    alt-q = "close"
+    alt-w = "close"
     alt-v = "volume up"
     alt-shift-v = "volume down"
     alt-m = "volume mute-toggle"
