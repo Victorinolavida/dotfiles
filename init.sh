@@ -83,7 +83,12 @@ install_kitty_terminal(){
 }
 
 install_oh_my_ZSH(){
-    echo "Installing ohmy zsh"
+    if check_app_exist "zsh";
+    then
+        echo "zsh already installed"
+    fi
+        echo "installing zsh"
+
 }
 
 install_nvim(){
@@ -119,12 +124,13 @@ install_nvim(){
 }
 
 main(){
-    # install Kitty terminal
-    install_kitty_terminal && \
-    # install zsh and oh my zsh
-    install_oh_my_ZSH && \
-    ## install neovim
-    install_nvim
+    # # install Kitty terminal
+    # install_kitty_terminal && \
+    # # install zsh and oh my zsh
+    # install_oh_my_ZSH && \
+    # ## install neovim
+    # install_nvim
+    install_oh_my_ZSH
 }
 
 main
