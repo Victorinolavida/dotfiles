@@ -93,7 +93,8 @@ automatically-unhide-macos-hidden-apps = false
     alt-shift-ctrl-k = 'join-with up'
     alt-shift-ctrl-l = 'join-with right'
 
-
+    cmd-h = [] # Disable "hide application"
+    cmd-alt-h = [] # Disable "hide others"
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#layout
     alt-d = 'layout tiles horizontal vertical'
