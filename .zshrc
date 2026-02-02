@@ -177,3 +177,4 @@ bindkey -s ^o "tmux-sessionizer\n"
 # bindkey -r '^r'
 export PATH="$HOME/.emacs.d/bin:$PATH"
 
+alias clear=clear && printf '\e[3J'
