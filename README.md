@@ -94,3 +94,4 @@ ln -s .aerospace.toml ~/.config/.aerospace.toml
 ##ranger
 
 ranger --copy-config=all
+# emacs_doom
