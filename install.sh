@@ -65,17 +65,31 @@ install_kitty() {
 
 # ── Editor ───────────────────────────────────────────────────────────────────
 install_nvim() {
-  if has nvim; then
+  if ! has nvim; then
+    log "Installing Neovim..."
+    if is_mac; then
+      brew install neovim
+    elif is_linux; then
+      sudo snap install nvim --classic
+    fi
+    success "Neovim installed"
+  else
     success "Neovim already installed"
-    return
   fi
-  log "Installing Neovim..."
-  if is_mac; then
-    brew install neovim
-  elif is_linux; then
-    sudo snap install nvim --classic
+
+  # Clone nvim config
+  local nvim_config="$CONFIG_DIR/nvim"
+  if [ ! -d "$nvim_config" ]; then
+    log "Cloning nvim config..."
+    git clone https://github.com/Victorinolavida/minimal_nvim "$nvim_config"
+  else
+    success "Nvim config already exists at $nvim_config"
   fi
-  success "Neovim installed"
+
+  # Initialize plugins (lazy.nvim)
+  log "Initializing nvim plugins..."
+  nvim --headless "+Lazy! sync" +qa 2>/dev/null
+  success "Nvim plugins initialized"
 }
 
 # ── Shell tools ───────────────────────────────────────────────────────────────
