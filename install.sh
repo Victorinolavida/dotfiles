@@ -139,13 +139,16 @@ install_shell_tools() {
       sudo install /tmp/lazygit /usr/local/bin
     fi
 
-    # yazi
+    # yazi (binary release)
     if ! has yazi; then
-      if has cargo; then
-        cargo install --locked yazi-fm yazi-cli
-      else
-        warn "Cargo not found — skipping yazi. Install Rust first, then run: cargo install --locked yazi-fm yazi-cli"
-      fi
+      YAZI_VERSION=$(curl -s "https://api.github.com/repos/sxyazi/yazi/releases/latest" \
+        | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+      curl -Lo /tmp/yazi.zip \
+        "https://github.com/sxyazi/yazi/releases/download/v${YAZI_VERSION}/yazi-x86_64-unknown-linux-gnu.zip"
+      unzip -o /tmp/yazi.zip -d /tmp/yazi
+      sudo install "/tmp/yazi/yazi-x86_64-unknown-linux-gnu/yazi" /usr/local/bin/yazi
+      sudo install "/tmp/yazi/yazi-x86_64-unknown-linux-gnu/ya" /usr/local/bin/ya
+      rm -rf /tmp/yazi /tmp/yazi.zip
     fi
   fi
 
