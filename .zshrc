@@ -65,7 +65,11 @@ alias vimconfig="nvim ~/.config/nvim/"
 alias zshconfig="nvim ~/.zshrc"
 alias reloadconfig="source ~/.zshrc"
 alias reloadtmux="tmux source ~/.config/tmux/tmux.conf"
-alias cat="bat"
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  alias cat="batcat"
+else
+  alias cat="bat"
+fi
 alias clear='clear && printf "\e[3J"'
 alias air='$(go env GOPATH)/bin/air'
 alias droplet="ssh -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7"
@@ -75,7 +79,13 @@ alias viclavida="ssh -t -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7 ./
 bindkey -s ^o "tmux-sessionizer\n"
 
 # fzf
-source <(fzf --zsh)
+if command -v fzf &>/dev/null; then
+  if fzf --zsh &>/dev/null; then
+    source <(fzf --zsh)
+  elif [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]; then
+    source /usr/share/doc/fzf/examples/key-bindings.zsh
+  fi
+fi
 
 # Angular CLI autocompletion
 if command -v ng &>/dev/null; then

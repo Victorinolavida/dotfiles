@@ -260,6 +260,32 @@ install_rust() {
   success "Rust installed"
 }
 
+# ── Fonts ────────────────────────────────────────────────────────────────────
+install_fonts() {
+  log "Installing JetBrainsMono Nerd Font..."
+
+  if is_mac; then
+    brew install --cask font-jetbrains-mono-nerd-font
+  elif is_linux; then
+    local font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
+    if fc-list | grep -qi "JetBrainsMono Nerd Font"; then
+      success "JetBrainsMono Nerd Font already installed"
+      return
+    fi
+    local version
+    version=$(curl -s "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest" \
+      | grep '"tag_name"' | sed 's/.*"\(v[^"]*\)".*/\1/')
+    curl -Lo /tmp/JetBrainsMono.zip \
+      "https://github.com/ryanoasis/nerd-fonts/releases/download/${version}/JetBrainsMono.zip"
+    mkdir -p "$font_dir"
+    unzip -o /tmp/JetBrainsMono.zip -d "$font_dir"
+    rm /tmp/JetBrainsMono.zip
+    fc-cache -fv "$font_dir"
+  fi
+
+  success "JetBrainsMono Nerd Font installed"
+}
+
 # ── Dotfile symlinks ──────────────────────────────────────────────────────────
 setup_symlinks() {
   log "Setting up dotfile symlinks..."
@@ -304,6 +330,7 @@ usage() {
   echo "  --fnm          Node version manager"
   echo "  --go           Go language"
   echo "  --rust         Rust + Cargo"
+  echo "  --fonts        JetBrainsMono Nerd Font"
   echo "  --symlinks     Dotfile symlinks only"
   echo "  --help         Show this help"
 }
@@ -328,6 +355,7 @@ main() {
         install_omzsh
         install_fnm
         install_go
+        install_fonts
         setup_symlinks
         ;;
       --core)         setup_package_manager && install_core ;;
@@ -339,6 +367,7 @@ main() {
       --fnm)          install_fnm ;;
       --go)           install_go ;;
       --rust)         install_rust ;;
+      --fonts)        install_fonts ;;
       --symlinks)     setup_symlinks ;;
       --help)         usage ;;
       *) error "Unknown option: $arg"; usage; exit 1 ;;
