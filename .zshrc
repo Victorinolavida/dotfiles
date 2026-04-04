@@ -178,3 +178,10 @@ bindkey -s ^o "tmux-sessionizer\n"
 export PATH="$HOME/.emacs.d/bin:$PATH"
 
 alias clear=clear && printf '\e[3J'
+
+# Kitty OS-specific key bindings
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  export KITTY_OS_KEYS="$HOME/.config/kitty/macos-keys.conf"
+else
+  export KITTY_OS_KEYS="$HOME/.config/kitty/linux-keys.conf"
+fi
