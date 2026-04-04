@@ -286,6 +286,19 @@ install_fonts() {
   success "JetBrainsMono Nerd Font installed"
 }
 
+# ── Kitty OS key symlink ──────────────────────────────────────────────────────
+setup_kitty_os_keys() {
+  local kitty_dir="$CONFIG_DIR/kitty"
+  local symlink="$kitty_dir/os-keys.conf"
+  if is_mac; then
+    local target="$kitty_dir/macos-keys.conf"
+  else
+    local target="$kitty_dir/linux-keys.conf"
+  fi
+  ln -sf "$target" "$symlink"
+  success "Kitty os-keys.conf → $target"
+}
+
 # ── Dotfile symlinks ──────────────────────────────────────────────────────────
 setup_symlinks() {
   log "Setting up dotfile symlinks..."
@@ -313,6 +326,8 @@ setup_symlinks() {
   link "kitty"   "$CONFIG_DIR/kitty"
   link "yazi"    "$CONFIG_DIR/yazi"
   link ".zshrc"  "$HOME/.zshrc"
+
+  setup_kitty_os_keys
 }
 
 # ── Help ─────────────────────────────────────────────────────────────────────
