@@ -1,0 +1,30 @@
+[manager]
+ratio          = [1, 3, 4]
+sort_by        = "natural"
+sort_sensitive = false
+sort_reverse   = false
+sort_dir_first = true
+show_hidden    = false
+show_symlink   = true
+
+[preview]
+tab_size   = 2
+max_width  = 600
+max_height = 900
+cache_dir  = ""
+
+[opener]
+edit = [
+  { run = 'nvim "$@"', block = true },
+]
+
+[open]
+rules = [
+  { name = "*/", use = "folder" },
+  { mime = "text/*", use = "edit" },
+  { mime = "image/*", use = "image" },
+  { mime = "video/*", use = "video" },
+  { mime = "audio/*", use = "audio" },
+  { mime = "application/json", use = "edit" },
+  { mime = "inode/x-empty", use = "edit" },
+]
