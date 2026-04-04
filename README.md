@@ -1,96 +1,114 @@
-# tmux
+# Dotfiles
 
-To run this config you must have installed Tmux Plugin Manager (TPM) with the following command:
+Personal dotfiles for macOS and Linux. Includes configs for Kitty, Zsh, Tmux, Neovim, and Yazi.
 
-```bash
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-```
-
-Then run the next command to make a symbolic link to the config file:
+## Quick Install
 
 ```bash
-ln -s ~/.dotfiles/tmux/.tmux.conf ~/.tmux.conf
+git clone <your-repo-url> ~/.config/dotfiles
+cd ~/.config/dotfiles
+./install.sh --all
 ```
 
-Finally, start tmux and run the following command to install the plugins:
+Or install individual components:
 
 ```bash
-prefix + I
+./install.sh --help
 ```
 
-# Zsh
+## install.sh
 
-To run this config you must have installed Oh My Zsh with the following command:
+Handles all dependencies and symlinks automatically. Detects macOS (Homebrew) and Linux (apt) and installs the right packages for each.
+
+| Flag | What it installs |
+|------|-----------------|
+| `--all` | Everything below |
+| `--core` | git, curl, zsh |
+| `--terminal` | Kitty |
+| `--editor` | Neovim |
+| `--shell-tools` | eza, bat, fzf, fd, zoxide, lazygit, yazi |
+| `--tmux` | tmux + TPM |
+| `--omzsh` | Oh My Zsh + Powerlevel10k + plugins |
+| `--fnm` | Node version manager |
+| `--go` | Go |
+| `--rust` | Rust + Cargo |
+| `--symlinks` | Dotfile symlinks only |
+
+---
+
+## Kitty
+
+Cross-platform key bindings — uses `cmd+` on macOS and `ctrl+shift+` on Linux.
+
+The `KITTY_OS_KEYS` env var (set in `.zshrc`) points kitty to the right key config file at startup.
+
+**Symlink:**
+```bash
+ln -s ~/.config/dotfiles/kitty ~/.config/kitty
+```
+
+---
+
+## Zsh
+
+Requires Oh My Zsh + plugins. Run `./install.sh --omzsh` to set everything up.
+
+**Plugins included:**
+- `zsh-autosuggestions`
+- `zsh-syntax-highlighting`
+- `wd`
+- `powerlevel10k` theme
+
+**Symlink:**
+```bash
+ln -s ~/.config/dotfiles/.zshrc ~/.zshrc
+```
+
+---
+
+## Tmux
+
+Requires TPM (Tmux Plugin Manager). Run `./install.sh --tmux` to install tmux and TPM.
+
+After symlinking the config, open tmux and press `prefix + I` to install all plugins.
+
+**Symlink:**
+```bash
+ln -s ~/.config/dotfiles/tmux/.tmux.conf ~/.tmux.conf
+```
+
+---
+
+## Neovim
+
+Config lives in a separate repo: [minimal_nvim](https://github.com/Victorinolavida/minimal_nvim)
 
 ```bash
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+git clone https://github.com/Victorinolavida/minimal_nvim ~/.config/nvim
 ```
 
-Then run the next command to make a symbolic link to the config file:
+Or install via `./install.sh --editor`.
 
+---
+
+## Yazi
+
+Modern terminal file manager replacing Ranger. Uses vim-like keybindings (`hjkl`) and opens files in Neovim.
+
+Use `ya` instead of `yazi` to automatically `cd` into the last visited directory on exit.
+
+**Install:**
 ```bash
-ln -s ~/.dotfiles/zsh/.zshrc ~/.zshrc
+./install.sh --rust && ./install.sh --shell-tools
 ```
 
-you also need to install the following apps:
-
-- nvim
-- bat
-- fzf
-- zsh-autosuggestions
-- zsh-syntax-highlighting
-- zsh-completions
-- zsh-history-substring-search
-- fzf
-- eza
-- ripgrep
-- fd
-
-# Neovim
-
-To run this config you must have installed Neovim with the following command:
-
+**Symlink:**
 ```bash
-# For Ubuntu
-sudo apt install neovim
-# For MacOS
-brew install neovim
-
+ln -s ~/.config/dotfiles/yazi ~/.config/yazi
 ```
 
-Then run the next command to make a symbolic link to the config file:
+---
 
-```bash
-ln -s ~/.dotfiles/nvim/init.vim ~/.config/nvim/init.vim
-```
+## Multiple GitHub Accounts
 
-You also need to install the following plugins:
-
-- gopls
-- Node
-- Go
-- ripgrep
-- fd
-
-- autosuggesions plugin
-
-git clone https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions
-
-- zsh-syntax-highlighting plugin
-
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
-
-- zsh-fast-syntax-highlighting plugin
-
-git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/fast-syntax-highlighting
-
-- zsh-autocomplete plugin
-
-git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZSH_CUSTOM/plugins/zsh-autocomplete
-
-mkdir -r ~/.config/aerospace
-ln -s .aerospace.toml ~/.config/.aerospace.toml
-
-##ranger
-
-ranger --copy-config=all
+See `notes/` for setup instructions on managing multiple GitHub accounts.
