@@ -104,10 +104,4 @@ function ya() {
   fi
   rm -f -- "$tmp"
 }
-
-# Kitty OS-specific key bindings
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  export KITTY_OS_KEYS="$HOME/.config/kitty/macos-keys.conf"
-else
-  export KITTY_OS_KEYS="$HOME/.config/kitty/linux-keys.conf"
-fi
+eval "$(direnv hook zsh)"
