@@ -81,13 +81,15 @@ ln -s ~/.config/dotfiles/tmux/.tmux.conf ~/.tmux.conf
 
 ## Neovim
 
-Config lives in a separate repo: [minimal_nvim](https://github.com/Victorinolavida/minimal_nvim)
+Config lives in [minimal_nvim](https://github.com/Victorinolavida/minimal_nvim), included as a git submodule under `nvim/`.
+
+After cloning this repo, initialize the submodule:
 
 ```bash
-git clone https://github.com/Victorinolavida/minimal_nvim ~/.config/nvim
+git submodule update --init --recursive
 ```
 
-Or install via `./install.sh --editor`.
+Or just run `./install.sh --editor` which handles everything automatically.
 
 ---
 
