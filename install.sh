@@ -77,11 +77,13 @@ install_nvim() {
     success "Neovim already installed"
   fi
 
-  # Clone nvim config
+  # Symlink nvim config from submodule
   local nvim_config="$CONFIG_DIR/nvim"
-  if [ ! -d "$nvim_config" ]; then
-    log "Cloning nvim config..."
-    git clone https://github.com/Victorinolavida/minimal_nvim "$nvim_config"
+  if [ ! -e "$nvim_config" ]; then
+    log "Initializing nvim submodule..."
+    git -C "$DOTFILES_DIR" submodule update --init --recursive
+    ln -s "$DOTFILES_DIR/nvim" "$nvim_config"
+    success "Nvim config linked"
   else
     success "Nvim config already exists at $nvim_config"
   fi
