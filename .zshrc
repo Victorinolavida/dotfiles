@@ -85,6 +85,16 @@ fi
 # p10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# Yazi - change directory on exit
+function ya() {
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd"
+  fi
+  rm -f -- "$tmp"
+}
+
 # Kitty OS-specific key bindings
 if [[ "$OSTYPE" == "darwin"* ]]; then
   export KITTY_OS_KEYS="$HOME/.config/kitty/macos-keys.conf"
