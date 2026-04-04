@@ -228,6 +228,13 @@ install_rust() {
     success "Rust/Cargo already installed"
     return
   fi
+
+  # Install build dependencies required by Rust crates (e.g. yazi)
+  if is_linux; then
+    log "Installing Rust build dependencies..."
+    pkg_install build-essential libssl-dev pkg-config
+  fi
+
   log "Installing Rust..."
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   source "$HOME/.cargo/env"
