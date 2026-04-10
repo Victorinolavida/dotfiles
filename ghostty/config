@@ -1,0 +1,45 @@
+# ~/.config/ghostty/config
+
+# --- appearance ---
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+theme = catppuccin-mocha
+background-opacity = 1.0
+cursor-style = block
+cursor-style-blink = false
+
+# --- terminal compatibility (critical for nvim) ---
+term = xterm-256color
+bold-is-bright = false
+
+# --- true color & undercurl support for nvim ---
+color-bold-is-bright = false
+
+# --- clipboard integration ---
+clipboard-read = allow
+clipboard-write = allow
+clipboard-trim-trailing-spaces = true
+
+# --- mouse ---
+mouse-hide-while-typing = true
+focus-follows-mouse = false
+
+# --- scrollback ---
+scrollback-limit = 10000
+
+# --- window ---
+window-decoration = none
+window-padding-x = 8
+window-padding-y = 8
+window-padding-balance = true
+resize-overlay = never
+
+# --- keybinds: let tmux own prefix, avoid conflicts ---
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+keybind = ctrl+shift+equal=increase_font_size:1
+keybind = ctrl+shift+minus=decrease_font_size:1
+keybind = ctrl+shift+0=reset_font_size
+
+# --- open with tmux ---
+command = /usr/bin/tmux new-session -A -s main
