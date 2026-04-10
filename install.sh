@@ -53,6 +53,20 @@ install_core() {
 }
 
 # ── Terminal ─────────────────────────────────────────────────────────────────
+install_ghostty() {
+  if has ghostty; then
+    success "Ghostty already installed"
+    return
+  fi
+  log "Installing Ghostty..."
+  if is_mac; then
+    brew install --cask ghostty
+  elif is_linux; then
+    warn "Ghostty has no official Linux package yet — install manually from https://ghostty.org/download"
+  fi
+  success "Ghostty installed"
+}
+
 install_kitty() {
   if has kitty; then
     success "Kitty already installed"
@@ -323,11 +337,28 @@ setup_symlinks() {
 
   mkdir -p "$CONFIG_DIR"
 
+  link "ghostty" "$CONFIG_DIR/ghostty"
   link "kitty"   "$CONFIG_DIR/kitty"
   link "yazi"    "$CONFIG_DIR/yazi"
   link ".zshrc"  "$HOME/.zshrc"
 
   setup_kitty_os_keys
+}
+
+# ── Terminal chooser ─────────────────────────────────────────────────────────
+install_terminal() {
+  echo ""
+  echo "Which terminal would you like to install?"
+  echo "  1) Kitty"
+  echo "  2) Ghostty"
+  echo "  3) Both"
+  read -rp "Enter choice [1-3]: " choice
+  case "$choice" in
+    1) install_kitty ;;
+    2) install_ghostty ;;
+    3) install_kitty && install_ghostty ;;
+    *) warn "Invalid choice — skipping terminal install" ;;
+  esac
 }
 
 # ── Help ─────────────────────────────────────────────────────────────────────
@@ -337,7 +368,9 @@ usage() {
   echo "Options:"
   echo "  --all          Install everything"
   echo "  --core         Core tools (git, curl, zsh)"
-  echo "  --terminal     Kitty terminal"
+  echo "  --terminal     Prompt to choose terminal (kitty, ghostty, or both)"
+  echo "  --kitty        Kitty terminal only"
+  echo "  --ghostty      Ghostty terminal only"
   echo "  --editor       Neovim"
   echo "  --shell-tools  eza, bat, fzf, fd, zoxide, lazygit, yazi"
   echo "  --tmux         Tmux + TPM"
@@ -363,7 +396,7 @@ main() {
         setup_package_manager
         install_core
         install_rust
-        install_kitty
+        install_terminal
         install_nvim
         install_shell_tools
         install_tmux
@@ -374,7 +407,9 @@ main() {
         setup_symlinks
         ;;
       --core)         setup_package_manager && install_core ;;
-      --terminal)     install_kitty ;;
+      --terminal)     install_terminal ;;
+      --kitty)        install_kitty ;;
+      --ghostty)      install_ghostty ;;
       --editor)       install_nvim ;;
       --shell-tools)  install_shell_tools ;;
       --tmux)         install_tmux ;;
