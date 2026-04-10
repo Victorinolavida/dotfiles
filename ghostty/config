@@ -2,7 +2,7 @@
 
 # --- appearance ---
 font-family = JetBrainsMono Nerd Font
-font-size = 14
+font-size = 16
 theme = catppuccin-mocha
 background-opacity = 1.0
 cursor-style = block
@@ -11,9 +11,6 @@ cursor-style-blink = false
 # --- terminal compatibility (critical for nvim) ---
 term = xterm-256color
 bold-is-bright = false
-
-# --- true color & undercurl support for nvim ---
-color-bold-is-bright = false
 
 # --- clipboard integration ---
 clipboard-read = allow
