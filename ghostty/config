@@ -37,6 +37,3 @@ keybind = ctrl+shift+v=paste_from_clipboard
 keybind = ctrl+shift+equal=increase_font_size:1
 keybind = ctrl+shift+minus=decrease_font_size:1
 keybind = ctrl+shift+0=reset_font_size
-
-# --- open with tmux ---
-command = /usr/bin/tmux new-session -A -s main
