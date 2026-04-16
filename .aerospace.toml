@@ -1,8 +1,7 @@
 after-startup-command = ['exec-and-forget sketchybar']
 # Notify Sketchybar about workspace change
 exec-on-workspace-change = ['/bin/bash', '-c',
-  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE',
-  'exec-and-forget borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0'
+  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE && borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0'
 ]
 # Start AeroSpace at login
 start-at-login = true
@@ -81,7 +80,7 @@ automatically-unhide-macos-hidden-apps = false
     # end tell'
     # '''
     alt-ctrl-shift-f = 'fullscreen'
-    alt-ctrl-f = 'layout floating tiling'
+    alt-ctrl-f = ['layout floating tiling', 'flatten-workspace-tree', 'balance-sizes']
 
     alt-shift-left = 'join-with left'
     alt-shift-down = 'join-with down'
@@ -137,7 +136,7 @@ automatically-unhide-macos-hidden-apps = false
     alt-tab = 'workspace-back-and-forth'
     alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
     # Shortcuts
-    alt-enter = 'exec-and-forget open -n -a /Applications/kitty.app'
+    alt-enter = 'exec-and-forget open -n -a /Applications/Ghostty.app'
     # See: https://nikitabobko.github.io/AeroSpace/commands#mode
 
     # english keyboard
@@ -151,23 +150,23 @@ automatically-unhide-macos-hidden-apps = false
     alt-m = "volume mute-toggle"
 
 [[on-window-detected]]
-    if.app-name-regex-substring = 'chrome'
-        run = 'move-node-to-workspace 1'
+    if.app-id = 'com.google.Chrome'
+    check-further-callbacks = true
+    run = ['layout tiling', 'move-node-to-workspace 1']
+[[on-window-detected]]
+    if.app-name-regex-substring = 'terminal'
+        run = ['layout tiling', 'move-node-to-workspace 2']
 [[on-window-detected]]
     if.app-name-regex-substring = 'kitty'
         run = 'move-node-to-workspace 2'
-    # if.app-name-regex-substring = 'ghostty'
-    #     run = 'move-node-to-workspace 2'
-    # if.app-id = "com.mitchellh.ghostty"
-    #     run = [
-    #         "layout floating",
-    #         "move-node-to-workspace 2",
-    #     ]
+[[on-window-detected]]
+    if.app-name-regex-substring = 'ghostty'
+        run = ['layout tiling', 'move-node-to-workspace 2']
 [[on-window-detected]]
     if.app-name-regex-substring = 'dbeaver'
         run = 'move-node-to-workspace 3'
 [[on-window-detected]]
-    if.app-name-regex-substring = 'postman'
+    if.app-name-regex-substring = 'bruno'
         run = 'move-node-to-workspace 4'
 [[on-window-detected]]
     if.app-name-regex-substring = 'notion'
@@ -178,18 +177,21 @@ automatically-unhide-macos-hidden-apps = false
 [[on-window-detected]]
     if.app-name-regex-substring = 'spotify'
         run = 'move-node-to-workspace 7'
-[[on-window-detected]]
-    if.app-id = 'com.google.Chrome'
-        run = 'layout floating'
 # 'service' binding mode declaration.
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
 [mode.service.binding]
     esc = ['reload-config', 'mode main']
     r = ['flatten-workspace-tree', 'mode main'] # reset layout
-    f = ['layout floating tiling', 'mode main'] # Toggle between floating and tiling layout
+    f = ['layout floating tiling', 'flatten-workspace-tree', 'mode main'] # Toggle between floating and tiling layout
     backspace = ['close-all-windows-but-current', 'mode main']
 
 [mode.apps.binding]
   esc = 'mode main'
   alt-shift-enter = 'mode main'
+  g = 'exec-and-forget open -n -a /Applications/Google Chrome.app'
+  d = 'exec-and-forget open -n -a /Applications/DBngin.app'
+  p = 'exec-and-forget open -n -a /Applications/Bruno.app'
+  n = 'exec-and-forget open -n -a /Applications/Notion.app'
+  s = 'exec-and-forget open -n -a /Applications/Slack.app'
+  m = 'exec-and-forget open -n -a /Applications/Spotify.app'
 
