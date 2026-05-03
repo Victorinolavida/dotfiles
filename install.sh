@@ -345,6 +345,12 @@ setup_symlinks() {
   setup_kitty_os_keys
 }
 
+# ── Obsidian vault ───────────────────────────────────────────────────────────
+setup_obsidian_vault() {
+  log "Setting up Obsidian vault..."
+  "$DOTFILES_DIR/scripts/bootstrap-vault"
+}
+
 # ── Terminal chooser ─────────────────────────────────────────────────────────
 install_terminal() {
   echo ""
@@ -380,6 +386,7 @@ usage() {
   echo "  --rust         Rust + Cargo"
   echo "  --fonts        JetBrainsMono Nerd Font"
   echo "  --symlinks     Dotfile symlinks only"
+  echo "  --vault        Obsidian vault (clone from GitHub)"
   echo "  --help         Show this help"
 }
 
@@ -405,6 +412,7 @@ main() {
         install_go
         install_fonts
         setup_symlinks
+        setup_obsidian_vault
         ;;
       --core)         setup_package_manager && install_core ;;
       --terminal)     install_terminal ;;
@@ -419,6 +427,7 @@ main() {
       --rust)         install_rust ;;
       --fonts)        install_fonts ;;
       --symlinks)     setup_symlinks ;;
+      --vault)        setup_obsidian_vault ;;
       --help)         usage ;;
       *) error "Unknown option: $arg"; usage; exit 1 ;;
     esac
