@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Bootstrap the obsidian-vault git repo at ~/obsidian-vault.
 # Usage:
-#   bootstrap-vault                  init a fresh local repo
-#   bootstrap-vault <remote-url>     clone an existing remote
+#   bootstrap-vault                  clone from the default remote
+#   bootstrap-vault <remote-url>     clone from a custom remote
 set -euo pipefail
 
 RED='\033[0;31m'
@@ -17,22 +17,16 @@ warn()    { echo -e "${YELLOW}[warn]${NC} $1"; }
 error()   { echo -e "${RED}[error]${NC} $1"; exit 1; }
 
 VAULT_DIR="$HOME/obsidian-vault"
-REMOTE="${1:-}"
+DEFAULT_REMOTE="git@github.com:victorinolavida/obsidian.git"
+REMOTE="${1:-$DEFAULT_REMOTE}"
 
 if [[ -d "$VAULT_DIR/.git" ]]; then
   success "Vault already initialised at $VAULT_DIR — nothing to do."
   exit 0
 fi
 
-if [[ -n "$REMOTE" ]]; then
-  log "Cloning $REMOTE → $VAULT_DIR"
-  git clone "$REMOTE" "$VAULT_DIR"
-else
-  log "Initialising new git repo at $VAULT_DIR"
-  mkdir -p "$VAULT_DIR"
-  git -C "$VAULT_DIR" init
-  git -C "$VAULT_DIR" checkout -b main
-fi
+log "Cloning $REMOTE → $VAULT_DIR"
+git clone "$REMOTE" "$VAULT_DIR"
 
 # Directories expected by obsidian.nvim workspace config
 mkdir -p "$VAULT_DIR/daily" "$VAULT_DIR/templates"
@@ -45,17 +39,9 @@ if [[ ! -f "$GITIGNORE" ]]; then
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .trash/
+.DS_Store
 EOF
   success "Created .gitignore"
-fi
-
-if [[ -z "$REMOTE" ]]; then
-  git -C "$VAULT_DIR" add -A
-  git -C "$VAULT_DIR" commit -m "chore: initial vault scaffold"
-  echo ""
-  warn "No remote set. To push:"
-  echo "  git -C $VAULT_DIR remote add origin <url>"
-  echo "  git -C $VAULT_DIR push -u origin main"
 fi
 
 echo ""
