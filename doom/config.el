@@ -42,9 +42,64 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
-;; Go debugger (delve via dape — dlv config built-in)
+;; Tune gopls (match nvim setup: inlay hints, codelenses, gofumpt, full analyses)
+(after! lsp-go
+  (setq lsp-go-analyses
+        '((unusedparams . t)
+          (unusedwrite . t)
+          (shadow . t)
+          (useany . t)
+          (nilness . t))
+        lsp-go-use-gofumpt t
+        lsp-go-codelenses
+        '((generate . t)
+          (gc_details . t)
+          (run_govulncheck . t)
+          (tidy . t)
+          (upgrade_dependency . t)
+          (vendor . t))
+        lsp-go-hints
+        '((assignVariableTypes . t)
+          (compositeLiteralFields . t)
+          (compositeLiteralTypes . t)
+          (constantValues . t)
+          (functionTypeParameters . t)
+          (parameterNames . t)
+          (rangeVariableTypes . t))))
+
+(after! lsp-mode
+  (setq lsp-inlay-hint-enable t
+        lsp-enable-snippet t
+        lsp-completion-enable-additional-text-edit t
+        lsp-signature-auto-activate t
+        lsp-signature-render-documentation t))
+
+;; Inline doc popup (like nvim's hover with K)
+(after! lsp-ui
+  (setq lsp-ui-doc-enable t
+        lsp-ui-doc-show-with-cursor nil   ; only on demand, not auto
+        lsp-ui-doc-show-with-mouse nil
+        lsp-ui-doc-position 'at-point
+        lsp-ui-doc-max-width 80
+        lsp-ui-doc-max-height 25
+        lsp-ui-doc-delay 0.2
+        lsp-ui-doc-include-signature t
+        lsp-ui-sideline-enable t
+        lsp-ui-sideline-show-hover nil
+        lsp-ui-sideline-show-diagnostics t
+        lsp-ui-sideline-show-code-actions t)
+  (map! :map lsp-mode-map
+        :n "K" #'lsp-ui-doc-glance
+        :leader
+        (:prefix ("c" . "code")
+         :desc "Toggle doc frame" "K" #'lsp-ui-doc-show
+         :desc "Focus doc frame"  "k" #'lsp-ui-doc-focus-frame)))
+
+;; Go debugger (delve via dape) — split layout like nvim dap-ui
 (after! dape
-  (setq dape-buffer-window-arrangement 'right))
+  (setq dape-buffer-window-arrangement 'gud
+        dape-info-hide-mode-line nil
+        dape-stack-trace-levels 10))
 
 ;; Go test runner (go.work workspace aware)
 (defun +go/module-root ()
@@ -99,6 +154,58 @@
          :desc "Test all"       "a" #'+go/test-all
          :desc "Test all+race"  "r" #'+go/test-all-race)))
 
+
+;; vterm
+(after! vterm
+  (setq vterm-max-scrollback 10000))
+
+;; Better autocomplete (corfu tuning + cape sources + icons)
+(after! corfu
+  (setq corfu-auto t
+        corfu-auto-delay 0.1
+        corfu-auto-prefix 1
+        corfu-preselect 'first
+        corfu-cycle t
+        corfu-quit-no-match 'separator
+        corfu-preview-current 'insert
+        corfu-popupinfo-delay '(0.3 . 0.2))
+  (corfu-popupinfo-mode 1)
+  (with-eval-after-load 'kind-icon
+    (setq kind-icon-default-face 'corfu-default)
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)))
+
+(use-package! kind-icon
+  :after corfu
+  :config
+  (setq kind-icon-use-icons t
+        kind-icon-blend-background nil))
+
+;; Cape: extra completion sources
+(after! cape
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-keyword))
+
+;; Projectile: auto-discover projects (like nvim-project depth=2 under ~/Documents)
+(after! projectile
+  (setq projectile-project-search-path '(("~/Documents/" . 2))
+        projectile-auto-discover t
+        projectile-enable-caching t
+        projectile-sort-order 'recently-active))
+
+;; Prettier Go test output via gotest
+(use-package! gotest
+  :after go-mode
+  :init
+  (after! go-mode
+    (map! :localleader
+          :map go-mode-map
+          (:prefix ("T" . "gotest pretty")
+           :desc "Test at point"  "t" #'go-test-current-test
+           :desc "Test file"      "f" #'go-test-current-file
+           :desc "Test project"   "a" #'go-test-current-project
+           :desc "Benchmark"      "b" #'go-test-current-benchmark
+           :desc "Coverage"       "c" #'go-test-current-coverage))))
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
