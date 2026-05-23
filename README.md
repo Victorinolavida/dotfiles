@@ -1,116 +1,86 @@
 # Dotfiles
 
-Personal dotfiles for macOS and Linux. Includes configs for Kitty, Zsh, Tmux, Neovim, and Yazi.
+Personal dotfiles for macOS and Linux. Managed with [chezmoi](https://chezmoi.io).
 
 ## Quick Install
 
 ```bash
-git clone <your-repo-url> ~/.config/dotfiles
-cd ~/.config/dotfiles
-./install.sh --all
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply Victorinolavida
 ```
 
-Or install individual components:
+Or if chezmoi is already installed:
 
 ```bash
-./install.sh --help
-```
-
-## install.sh
-
-Handles all dependencies and symlinks automatically. Detects macOS (Homebrew) and Linux (apt) and installs the right packages for each.
-
-| Flag | What it installs |
-|------|-----------------|
-| `--all` | Everything below |
-| `--core` | git, curl, zsh |
-| `--terminal` | Kitty |
-| `--editor` | Neovim |
-| `--shell-tools` | eza, bat, fzf, fd, zoxide, lazygit, yazi |
-| `--tmux` | tmux + TPM |
-| `--omzsh` | Oh My Zsh + Powerlevel10k + plugins |
-| `--fnm` | Node version manager |
-| `--go` | Go |
-| `--rust` | Rust + Cargo |
-| `--symlinks` | Dotfile symlinks only |
-
----
-
-## Kitty
-
-Cross-platform key bindings — uses `cmd+` on macOS and `ctrl+shift+` on Linux.
-
-The `KITTY_OS_KEYS` env var (set in `.zshrc`) points kitty to the right key config file at startup.
-
-**Symlink:**
-```bash
-ln -s ~/.config/dotfiles/kitty ~/.config/kitty
+chezmoi init --apply Victorinolavida
 ```
 
 ---
 
-## Zsh
+## How it works
 
-Requires Oh My Zsh + plugins. Run `./install.sh --omzsh` to set everything up.
+[chezmoi](https://chezmoi.io) manages symlinks and file application. On first run it also executes `run_once_install.sh.tmpl` to install all packages.
 
-**Plugins included:**
-- `zsh-autosuggestions`
-- `zsh-syntax-highlighting`
-- `wd`
-- `powerlevel10k` theme
+| Command | What it does |
+|---------|-------------|
+| `chezmoi apply` | Apply config changes to `$HOME` |
+| `chezmoi diff` | Preview what would change |
+| `chezmoi edit ~/.zshrc` | Edit source file and apply |
+| `chezmoi cd` | Jump into source directory |
+| `chezmoi update` | Pull latest + apply |
 
-**Symlink:**
-```bash
-ln -s ~/.config/dotfiles/.zshrc ~/.zshrc
+---
+
+## Source structure
+
+```
+dotfiles/
+├── dot_zshrc              → ~/.zshrc
+├── dot_tmux.conf          → ~/.tmux.conf
+├── dot_aerospace.toml     → ~/.aerospace.toml
+├── dot_wezterm.lua        → ~/.wezterm.lua
+├── dot_doom.d/            → ~/.doom.d/
+├── dot_config/
+│   ├── ghostty/           → ~/.config/ghostty/
+│   ├── kitty/             → ~/.config/kitty/
+│   └── yazi/              → ~/.config/yazi/
+├── dot_local/bin/         → ~/.local/bin/  (tmux scripts)
+├── run_once_install.sh.tmpl  — package installs (runs once)
+├── .chezmoi.toml.tmpl     — chezmoi config
+├── .chezmoiexternal.toml  — external repos (nvim)
+└── .chezmoiignore         — files chezmoi skips
 ```
 
 ---
 
-## Tmux
+## Configs
 
-Requires TPM (Tmux Plugin Manager). Run `./install.sh --tmux` to install tmux and TPM.
+### Zsh
+Requires Oh My Zsh + plugins (installed by `run_once_install.sh.tmpl`).
 
-After symlinking the config, open tmux and press `prefix + I` to install all plugins.
+Plugins: `zsh-autosuggestions`, `zsh-syntax-highlighting`, `wd`, `powerlevel10k` theme.
 
-**Symlink:**
-```bash
-ln -s ~/.config/dotfiles/tmux/.tmux.conf ~/.tmux.conf
-```
+### Kitty
+Cross-platform key bindings. `os-keys.conf` is generated from a chezmoi template — uses `cmd+` on macOS and `ctrl+shift+` on Linux. No manual symlink needed.
 
----
+### Ghostty
+Config at `~/.config/ghostty/config`.
 
-## Neovim
+### Tmux
+Requires TPM. Installed by `run_once_install.sh.tmpl`. After first apply, open tmux and press `prefix + I` to install plugins.
 
-Config lives in [minimal_nvim](https://github.com/Victorinolavida/minimal_nvim), included as a git submodule under `nvim/`.
+### Neovim
+Config sourced from [minimal_nvim](https://github.com/Victorinolavida/minimal_nvim) via `.chezmoiexternal.toml`. chezmoi clones it automatically to `~/.config/nvim`.
 
-After cloning this repo, initialize the submodule:
+### Doom Emacs
+Config at `~/.doom.d/`. Doom itself installed by `run_once_install.sh.tmpl`.
 
-```bash
-git submodule update --init --recursive
-```
+Add `~/.emacs.d/bin` to `PATH` if not already present (`.zshrc` handles this).
 
-Or just run `./install.sh --editor` which handles everything automatically.
-
----
-
-## Yazi
-
-Modern terminal file manager replacing Ranger. Uses vim-like keybindings (`hjkl`) and opens files in Neovim.
-
-Use `ya` instead of `yazi` to automatically `cd` into the last visited directory on exit.
-
-**Install:**
-```bash
-./install.sh --rust && ./install.sh --shell-tools
-```
-
-**Symlink:**
-```bash
-ln -s ~/.config/dotfiles/yazi ~/.config/yazi
-```
+### Yazi
+Modern terminal file manager. Use `ya` instead of `yazi` to `cd` into the last visited directory on exit.
 
 ---
 
 ## Multiple GitHub Accounts
 
-See `notes/` for setup instructions on managing multiple GitHub accounts.
+See `notes/multiple-github-accounts.md`.

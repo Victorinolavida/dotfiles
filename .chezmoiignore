@@ -1,0 +1,13 @@
+# Repo meta — not managed as dotfiles
+scripts
+assets
+notes
+plugins
+init.sh
+install.sh
+README.md
+.gitmodules
+
+# nvim submodule — managed separately via .chezmoiexternal.toml
+nvim
+dot_config/nvim
