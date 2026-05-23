@@ -240,6 +240,43 @@ install_fnm() {
   success "fnm installed — restart your shell then run: fnm install --lts"
 }
 
+# ── Emacs / Doom ─────────────────────────────────────────────────────────────
+install_doom() {
+  if ! has emacs; then
+    log "Installing Emacs..."
+    if is_mac; then
+      brew install --cask emacs
+    elif is_linux; then
+      pkg_install emacs
+    fi
+    success "Emacs installed"
+  else
+    success "Emacs already installed"
+  fi
+
+  if ! has git; then
+    error "git required for Doom install"
+    return 1
+  fi
+
+  if [ ! -d "$HOME/.emacs.d" ]; then
+    log "Installing Doom Emacs..."
+    git clone --depth 1 https://github.com/doomemacs/doomemacs "$HOME/.emacs.d"
+    "$HOME/.emacs.d/bin/doom" install --no-config
+    success "Doom Emacs installed"
+  else
+    success "Doom Emacs already installed"
+  fi
+
+  if ! has dlv; then
+    log "Installing delve (Go debugger)..."
+    go install github.com/go-delve/delve/cmd/dlv@latest
+    success "delve installed"
+  else
+    success "delve already installed"
+  fi
+}
+
 # ── Go ────────────────────────────────────────────────────────────────────────
 install_go() {
   if has go; then
@@ -341,6 +378,7 @@ setup_symlinks() {
   link "kitty"   "$CONFIG_DIR/kitty"
   link "yazi"    "$CONFIG_DIR/yazi"
   link ".zshrc"  "$HOME/.zshrc"
+  link "doom"    "$HOME/.doom.d"
 
   setup_kitty_os_keys
 }
@@ -382,6 +420,7 @@ usage() {
   echo "  --tmux         Tmux + TPM"
   echo "  --omzsh        Oh My Zsh + plugins + Powerlevel10k"
   echo "  --fnm          Node version manager"
+  echo "  --emacs        Doom Emacs + delve debugger"
   echo "  --go           Go language"
   echo "  --rust         Rust + Cargo"
   echo "  --fonts        JetBrainsMono Nerd Font"
@@ -410,6 +449,7 @@ main() {
         install_omzsh
         install_fnm
         install_go
+        install_doom
         install_fonts
         setup_symlinks
         setup_obsidian_vault
@@ -423,6 +463,7 @@ main() {
       --tmux)         install_tmux ;;
       --omzsh)        install_omzsh ;;
       --fnm)          install_fnm ;;
+      --emacs)        install_doom ;;
       --go)           install_go ;;
       --rust)         install_rust ;;
       --fonts)        install_fonts ;;
