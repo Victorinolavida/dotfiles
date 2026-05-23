@@ -241,18 +241,56 @@ install_fnm() {
 }
 
 # ── Emacs / Doom ─────────────────────────────────────────────────────────────
-install_doom() {
-  if ! has emacs; then
-    log "Installing Emacs..."
-    if is_mac; then
-      brew install --cask emacs
-    elif is_linux; then
+# Based on: https://github.com/doomemacs/doomemacs/blob/master/docs/getting_started.org
+install_emacs() {
+  if has emacs; then
+    success "Emacs already installed ($(emacs --version | head -1))"
+    return
+  fi
+
+  log "Installing Emacs..."
+  if is_mac; then
+    # emacs-plus with native compilation (recommended by Doom on macOS)
+    brew tap d12frosted/emacs-plus
+    brew install emacs-plus@30 --with-native-comp
+    # symlink Emacs.app to /Applications for GUI launching
+    local app_path="/opt/homebrew/opt/emacs-plus@30/Emacs.app"
+    [ -d "$app_path" ] && ln -sf "$app_path" /Applications/Emacs.app
+  elif is_linux; then
+    # Emacs 29+ on Debian/Ubuntu via PPA (kelleyk) for native-comp build
+    if has add-apt-repository; then
+      sudo add-apt-repository -y ppa:kelleyk/emacs || true
+      sudo apt-get update -qq
+      sudo apt-get install -y emacs29 || pkg_install emacs
+    else
       pkg_install emacs
     fi
-    success "Emacs installed"
-  else
-    success "Emacs already installed"
   fi
+  success "Emacs installed"
+}
+
+install_doom_deps() {
+  log "Installing Doom Emacs prerequisites (ripgrep, fd, git)..."
+  if is_mac; then
+    brew install ripgrep fd coreutils
+  elif is_linux; then
+    pkg_install ripgrep fd-find
+    if has fdfind && ! has fd; then
+      mkdir -p "$HOME/.local/bin"
+      ln -sf "$(which fdfind)" "$HOME/.local/bin/fd"
+    fi
+  fi
+  success "Doom prerequisites installed"
+}
+
+install_doom() {
+  if ! is_mac && ! is_linux; then
+    error "Unsupported OS — Doom install only supports macOS and Linux"
+    return 1
+  fi
+
+  install_emacs
+  install_doom_deps
 
   if ! has git; then
     error "git required for Doom install"
@@ -265,16 +303,24 @@ install_doom() {
     "$HOME/.emacs.d/bin/doom" install --no-config
     success "Doom Emacs installed"
   else
-    success "Doom Emacs already installed"
+    success "Doom Emacs already installed at ~/.emacs.d"
   fi
 
+  # delve for Go debugging
   if ! has dlv; then
-    log "Installing delve (Go debugger)..."
-    go install github.com/go-delve/delve/cmd/dlv@latest
-    success "delve installed"
+    if has go; then
+      log "Installing delve (Go debugger)..."
+      go install github.com/go-delve/delve/cmd/dlv@latest
+      success "delve installed"
+    else
+      warn "Go not found — skipping delve install (run --go first)"
+    fi
   else
     success "delve already installed"
   fi
+
+  warn "Add ~/.emacs.d/bin to PATH if not already:"
+  warn "  export PATH=\"\$HOME/.emacs.d/bin:\$PATH\""
 }
 
 # ── Go ────────────────────────────────────────────────────────────────────────
