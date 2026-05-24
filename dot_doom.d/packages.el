@@ -50,6 +50,25 @@
 ;; Icons in completion popup
 (package! kind-icon)
 
+;; Floating hover doc frame (replaces lsp-ui-doc-glance)
+(package! eldoc-box)
+
+;; Spotify controller
+(package! smudge)
+
+;; HTTP client (org-mode based, more powerful than restclient)
+(package! verb)
+
+;; PostgreSQL browser (DBeaver alternative)
+(package! pg)
+(package! pgmacs :recipe (:host github :repo "emarsden/pgmacs"))
+
+;; Go struct tag management (add/remove/rename json/db/etc tags)
+(package! go-tag)
+
+;; golangci-lint flycheck integration
+(package! flycheck-golangci-lint)
+
 
 ;; Doom's packages are pinned to a specific commit and updated from release to
 ;; release. The `unpin!' macro allows you to unpin single packages...

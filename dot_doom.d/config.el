@@ -42,58 +42,51 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
-;; Tune gopls (match nvim setup: inlay hints, codelenses, gofumpt, full analyses)
-(after! lsp-go
-  (setq lsp-go-analyses
-        '((unusedparams . t)
-          (unusedwrite . t)
-          (shadow . t)
-          (useany . t)
-          (nilness . t))
-        lsp-go-use-gofumpt t
-        lsp-go-codelenses
-        '((generate . t)
-          (gc_details . t)
-          (run_govulncheck . t)
-          (tidy . t)
-          (upgrade_dependency . t)
-          (vendor . t))
-        lsp-go-hints
-        '((assignVariableTypes . t)
-          (compositeLiteralFields . t)
-          (compositeLiteralTypes . t)
-          (constantValues . t)
-          (functionTypeParameters . t)
-          (parameterNames . t)
-          (rangeVariableTypes . t))))
+;; GC tuning — LSP servers produce large output; default limits cause stutters
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024))
 
-(after! lsp-mode
-  (setq lsp-inlay-hint-enable t
-        lsp-enable-snippet t
-        lsp-completion-enable-additional-text-edit t
-        lsp-signature-auto-activate t
-        lsp-signature-render-documentation t))
+;; Eglot: lighter LSP client, ~30% faster startup vs lsp-mode
+(after! eglot
+  (setq eglot-autoshutdown t
+        eglot-sync-connect nil        ; async connect, don't block startup
+        eglot-extend-to-xref t        ; xref jumps stay in eglot session
+        eglot-report-progress nil)    ; silence minibuffer noise
 
-;; Inline doc popup (like nvim's hover with K)
-(after! lsp-ui
-  (setq lsp-ui-doc-enable t
-        lsp-ui-doc-show-with-cursor nil   ; only on demand, not auto
-        lsp-ui-doc-show-with-mouse nil
-        lsp-ui-doc-position 'at-point
-        lsp-ui-doc-max-width 80
-        lsp-ui-doc-max-height 25
-        lsp-ui-doc-delay 0.2
-        lsp-ui-doc-include-signature t
-        lsp-ui-sideline-enable t
-        lsp-ui-sideline-show-hover nil
-        lsp-ui-sideline-show-diagnostics t
-        lsp-ui-sideline-show-code-actions t)
-  (map! :map lsp-mode-map
-        :n "K" #'lsp-ui-doc-glance
+  ;; gopls: same analyses/hints/lenses as previous lsp-go setup
+  (setq-default eglot-workspace-configuration
+    '(:gopls (:analyses     (:unusedparams t
+                             :unusedwrite  t
+                             :shadow       t
+                             :useany       t
+                             :nilness      t)
+              :gofumpt          t
+              :usePlaceholders  t
+              :directoryFilters ["-vendor" "-node_modules" "-.git"]
+              :codelenses (:generate         t
+                           :gc_details       t
+                           :run_govulncheck  t
+                           :tidy             t
+                           :upgrade_dependency t
+                           :vendor           t)
+              :hints (:assignVariableTypes    t
+                      :compositeLiteralFields t
+                      :compositeLiteralTypes  t
+                      :constantValues         t
+                      :functionTypeParameters t
+                      :parameterNames         t
+                      :rangeVariableTypes     t))))
+
+  (add-hook 'eglot-managed-mode-hook #'eglot-inlay-hints-mode)
+
+  ;; K = hover doc (replaces lsp-ui-doc-glance)
+  (map! :map eglot-mode-map
+        :n "K" #'eldoc-box-help-at-point
         :leader
         (:prefix ("c" . "code")
-         :desc "Toggle doc frame" "K" #'lsp-ui-doc-show
-         :desc "Focus doc frame"  "k" #'lsp-ui-doc-focus-frame)))
+         :desc "Hover doc"    "K" #'eglot-help-at-point
+         :desc "Rename"       "r" #'eglot-rename
+         :desc "Code actions" "a" #'eglot-code-actions)))
 
 ;; Go debugger (delve via dape) — split layout like nvim dap-ui
 (after! dape
@@ -152,7 +145,11 @@
          :desc "Test at point"  "t" #'+go/test-current-function
          :desc "Test file"      "f" #'+go/test-current-file
          :desc "Test all"       "a" #'+go/test-all
-         :desc "Test all+race"  "r" #'+go/test-all-race)))
+         :desc "Test all+race"  "r" #'+go/test-all-race)
+        (:prefix ("s" . "struct tags")
+         :desc "Add tag"        "a" #'go-tag-add
+         :desc "Remove tag"     "r" #'go-tag-remove
+         :desc "Clear tags"     "c" #'go-tag-clear)))
 
 
 ;; vterm
@@ -163,7 +160,7 @@
 (after! corfu
   (setq corfu-auto t
         corfu-auto-delay 0.1
-        corfu-auto-prefix 1
+        corfu-auto-prefix 2
         corfu-preselect 'first
         corfu-cycle t
         corfu-quit-no-match 'separator
@@ -186,12 +183,21 @@
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-keyword))
 
+;; Format on save via apheleia (async subprocess — no LSP round-trip, no blocking :w)
+(after! apheleia
+  (setf (alist-get 'go-mode apheleia-mode-alist) 'gofumpt)
+  (setf (alist-get 'gofumpt apheleia-formatters) '("gofumpt")))
+
 ;; Projectile: auto-discover projects (like nvim-project depth=2 under ~/Documents)
 (after! projectile
   (setq projectile-project-search-path '(("~/Documents/" . 2))
         projectile-auto-discover t
         projectile-enable-caching t
         projectile-sort-order 'recently-active))
+
+;; golangci-lint as secondary flycheck checker (eglot/flymake is primary)
+(use-package! flycheck-golangci-lint
+  :hook (go-mode . flycheck-golangci-lint-setup))
 
 ;; Prettier Go test output via gotest
 (use-package! gotest
@@ -206,6 +212,56 @@
            :desc "Test project"   "a" #'go-test-current-project
            :desc "Benchmark"      "b" #'go-test-current-benchmark
            :desc "Coverage"       "c" #'go-test-current-coverage))))
+
+;; org-roam (Obsidian alternative — zettelkasten + backlinks)
+(after! org-roam
+  (setq org-roam-directory "~/org/roam/")
+  (org-roam-db-autosync-mode)
+  (map! :leader
+        (:prefix ("n r" . "roam")
+         :desc "Find node"     "f" #'org-roam-node-find
+         :desc "Insert link"   "i" #'org-roam-node-insert
+         :desc "Capture"       "c" #'org-roam-capture
+         :desc "Toggle buffer" "b" #'org-roam-buffer-toggle
+         :desc "Graph"         "g" #'org-roam-graph)))
+
+;; xwidget-webkit as default browser (real WebKit engine)
+(setq browse-url-browser-function #'xwidget-webkit-browse-url)
+(map! :leader
+      (:prefix ("o w" . "browser")
+       :desc "Browse URL"          "w" #'xwidget-webkit-browse-url
+       :desc "Browse URL at point" "p" (cmd! (xwidget-webkit-browse-url (thing-at-point 'url t)))
+       :desc "Back"                "b" #'xwidget-webkit-back
+       :desc "Reload"              "r" #'xwidget-webkit-reload))
+
+;; Smudge — Spotify controller (needs OAuth2 credentials)
+;; Get client-id/secret at https://developer.spotify.com/dashboard
+(use-package! smudge
+  :config
+  (setq smudge-oauth2-client-id     (getenv "SPOTIFY_CLIENT_ID")
+        smudge-oauth2-client-secret (getenv "SPOTIFY_CLIENT_SECRET")
+        smudge-transport 'connect))
+
+(after! smudge
+  (map! :leader
+        (:prefix ("o S" . "spotify")
+         :desc "Track search"  "s" #'smudge-track-search
+         :desc "My playlists"  "l" #'smudge-my-playlists
+         :desc "Toggle play"   "t" #'smudge-controller-toggle-play
+         :desc "Next"          "n" #'smudge-controller-next-track
+         :desc "Prev"          "p" #'smudge-controller-previous-track
+         :desc "Volume +"      "=" #'smudge-controller-volume-up
+         :desc "Volume -"      "-" #'smudge-controller-volume-down)))
+
+;; Verb — HTTP client in org-mode (Bruno/Postman alternative)
+(use-package! verb
+  :after org
+  :config
+  (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
+
+;; pgmacs — PostgreSQL table browser (DBeaver alternative)
+(use-package! pgmacs
+  :commands (pgmacs-open-string pgmacs-open))
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
