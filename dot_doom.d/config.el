@@ -132,9 +132,9 @@
 (defun +go/run ()
   "Run current Go file with go run."
   (interactive)
-  (compile (format "cd %s && go run %s"
-                   (+go/module-root)
-                   (buffer-file-name))))
+  (let ((dir (or (+go/module-root)
+                 (file-name-directory (buffer-file-name)))))
+    (compile (format "cd %s && go run %s" dir (buffer-file-name)))))
 
 (after! go-mode
   (map! :localleader
