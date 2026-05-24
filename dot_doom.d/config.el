@@ -129,6 +129,13 @@
   (interactive)
   (compile (format "cd %s && go test -v -race ./..." (+go/module-root))))
 
+(defun +go/run ()
+  "Run current Go file with go run."
+  (interactive)
+  (compile (format "cd %s && go run %s"
+                   (+go/module-root)
+                   (buffer-file-name))))
+
 (after! go-mode
   (map! :localleader
         :map go-mode-map
@@ -141,11 +148,13 @@
          :desc "Step in"             "i" #'dape-step-in
          :desc "Step out"            "o" #'dape-step-out
          :desc "Quit"                "q" #'dape-quit)
+        (:prefix ("r" . "run")
+         :desc "Run file"       "r" #'+go/run)
         (:prefix ("t" . "test")
          :desc "Test at point"  "t" #'+go/test-current-function
          :desc "Test file"      "f" #'+go/test-current-file
          :desc "Test all"       "a" #'+go/test-all
-         :desc "Test all+race"  "r" #'+go/test-all-race)
+         :desc "Test all+race"  "R" #'+go/test-all-race)
         (:prefix ("s" . "struct tags")
          :desc "Add tag"        "a" #'go-tag-add
          :desc "Remove tag"     "r" #'go-tag-remove
