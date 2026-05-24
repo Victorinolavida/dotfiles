@@ -23,12 +23,13 @@ brew install --cask \
   ghostty \
   font-jetbrains-mono-nerd-font
 
-# Emacs (Doom)
+# Emacs (Doom) — emacs-mac with xwidgets for embedded browser support
 if ! has emacs; then
-  brew tap d12frosted/emacs-plus
-  brew install emacs-plus@30 --with-native-comp
-  app_path="/opt/homebrew/opt/emacs-plus@30/Emacs.app"
-  [ -d "$app_path" ] && ln -sf "$app_path" /Applications/Emacs.app
+  brew tap railwaycat/emacsmacport
+  brew install emacs-mac@29 --with-xwidgets
+  app_path="/opt/homebrew/opt/emacs-mac@29/Emacs.app"
+  # cp -r not ln -sf: Spotlight does not index symlinks
+  [ -d "$app_path" ] && cp -r "$app_path" /Applications/Emacs.app
 fi
 
 # fnm

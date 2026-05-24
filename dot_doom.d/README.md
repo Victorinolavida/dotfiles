@@ -7,7 +7,10 @@ Multi-language development environment (Go primary) with eglot LSP, debugger, fo
 ### Emacs
 
 ```bash
-brew install emacs-plus --with-native-comp
+brew tap railwaycat/emacsmacport
+brew install emacs-mac@29 --with-xwidgets
+# cp not symlink — Spotlight does not index symlinks
+cp -r /opt/homebrew/opt/emacs-mac@29/Emacs.app /Applications/Emacs.app
 ```
 
 ### Doom sync
