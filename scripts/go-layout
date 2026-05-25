@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+SESSION=${1:-$(basename "$PWD")}
+
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  tmux attach-session -t "$SESSION"
+  exit 0
+fi
+
+tmux new-session -d -s "$SESSION" -x 220 -y 50
+
+tmux rename-window -t "$SESSION:1" 'editor'
+tmux send-keys -t "$SESSION:1" 'nvim .' Enter
+
+tmux new-window -t "$SESSION:2" -n 'shell'
+tmux split-window -t "$SESSION:2" -v -p 30
+tmux select-pane -t "$SESSION:2.1"
+
+tmux attach-session -t "$SESSION"
