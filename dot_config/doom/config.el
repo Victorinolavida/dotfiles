@@ -92,7 +92,29 @@
 (after! dape
   (setq dape-buffer-window-arrangement 'gud
         dape-info-hide-mode-line nil
-        dape-stack-trace-levels 10))
+        dape-stack-trace-levels 10)
+
+  (add-to-list 'dape-configs
+               '(go-debug-main
+                 modes (go-mode go-ts-mode)
+                 command "/Users/victorinolavida/go/bin/dlv"
+                 command-args ("dap" "--listen" "127.0.0.1::autoport")
+                 command-cwd dape-cwd-fn
+                 :request "launch"
+                 :mode "debug"
+                 :type "go"
+                 :program "."))
+
+  (add-to-list 'dape-configs
+               '(go-debug-test
+                 modes (go-mode go-ts-mode)
+                 command "/Users/victorinolavida/go/bin/dlv"
+                 command-args ("dap" "--listen" "127.0.0.1::autoport")
+                 command-cwd dape-cwd-fn
+                 :request "launch"
+                 :mode "test"
+                 :type "go"
+                 :program ".")))
 
 ;; Go test runner (go.work workspace aware)
 (defun +go/module-root ()
