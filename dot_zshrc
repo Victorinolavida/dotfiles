@@ -63,7 +63,7 @@ alias vi="nvim"
 alias vimconfig="nvim ~/.config/nvim/"
 alias zshconfig="nvim ~/.zshrc"
 alias reloadconfig="source ~/.zshrc"
-alias reloadtmux="tmux source ~/.config/tmux/tmux.conf"
+alias reloadtmux="tmux source ~/.tmux.conf"
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   alias cat="batcat"
 else

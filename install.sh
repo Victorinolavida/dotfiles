@@ -10,6 +10,7 @@ log()     { echo -e "${BLUE}[install]${NC} $1"; }
 success() { echo -e "${GREEN}[ok]${NC} $1"; }
 
 REPO="Victorinolavida"
+SOURCE_DIR="$HOME/.config/dotfiles"
 
 if ! command -v chezmoi &>/dev/null; then
   log "Installing chezmoi..."
@@ -18,5 +19,5 @@ if ! command -v chezmoi &>/dev/null; then
 fi
 
 log "Applying dotfiles..."
-chezmoi init --apply "$REPO"
+chezmoi init --apply --source "$SOURCE_DIR" "$REPO"
 success "Done! Restart your shell."
