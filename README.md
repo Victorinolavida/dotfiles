@@ -38,8 +38,8 @@ dotfiles/
 ├── dot_tmux.conf          → ~/.tmux.conf
 ├── dot_aerospace.toml     → ~/.aerospace.toml
 ├── dot_wezterm.lua        → ~/.wezterm.lua
-├── dot_doom.d/            → ~/.doom.d/
 ├── dot_config/
+│   ├── doom/              → ~/.config/doom/
 │   ├── ghostty/           → ~/.config/ghostty/
 │   ├── kitty/             → ~/.config/kitty/
 │   └── yazi/              → ~/.config/yazi/

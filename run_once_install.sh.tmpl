@@ -26,7 +26,7 @@ brew install --cask \
 # Emacs (Doom) — emacs-mac with xwidgets for embedded browser support
 if ! has emacs; then
   brew tap railwaycat/emacsmacport
-  brew install emacs-mac@29 --with-xwidgets
+  brew install emacs-mac@29 --with-xwidgets --with-native-compilation
   app_path="/opt/homebrew/opt/emacs-mac@29/Emacs.app"
   # cp -r not ln -sf: Spotlight does not index symlinks
   [ -d "$app_path" ] && cp -r "$app_path" /Applications/Emacs.app
