@@ -50,6 +50,25 @@
 ;; Icons in completion popup
 (package! kind-icon)
 
+;; Floating hover doc frame (replaces lsp-ui-doc-glance)
+(package! eldoc-box)
+
+;; Spotify controller
+(package! smudge)
+
+;; HTTP client (org-mode based, more powerful than restclient)
+(package! verb)
+
+;; PostgreSQL browser (DBeaver alternative)
+(package! pg)
+(package! pgmacs :recipe (:host github :repo "emarsden/pgmacs"))
+
+;; Go struct tag management (add/remove/rename json/db/etc tags)
+(package! go-tag)
+
+;; golangci-lint flycheck integration
+(package! flycheck-golangci-lint)
+
 
 ;; Doom's packages are pinned to a specific commit and updated from release to
 ;; release. The `unpin!' macro allows you to unpin single packages...
@@ -58,3 +77,15 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
+;; (load! "go")
+
+(package! dape)
+;; (package! gotest)
+
+;; (straight-use-package
+;;  `(gotest-ui-mode :type git :repo "https://github.com/antifuchs/gotest-ui-mode.git"))
+(package! gotest-ui
+  :recipe (:host github :repo "antifuchs/gotest-ui-mode"))
+
+(package! go-tag)
+(package! go-test)
