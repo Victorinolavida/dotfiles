@@ -23,7 +23,6 @@ export LC_ALL="en_US.UTF-8"
 # PATH
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.config/tmux/scripts/:$PATH"
 export PATH="$HOME/.emacs.d/bin:$PATH"
 
 # Go
@@ -64,7 +63,7 @@ alias vi="nvim"
 alias vimconfig="nvim ~/.config/nvim/"
 alias zshconfig="nvim ~/.zshrc"
 alias reloadconfig="source ~/.zshrc"
-alias reloadtmux="tmux source ~/.config/tmux/tmux.conf"
+alias reloadtmux="tmux source ~/.tmux.conf"
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   alias cat="batcat"
 else
