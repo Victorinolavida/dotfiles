@@ -77,3 +77,15 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
+;; (load! "go")
+
+(package! dape)
+;; (package! gotest)
+
+;; (straight-use-package
+;;  `(gotest-ui-mode :type git :repo "https://github.com/antifuchs/gotest-ui-mode.git"))
+(package! gotest-ui
+  :recipe (:host github :repo "antifuchs/gotest-ui-mode"))
+
+(package! go-tag)
+(package! go-test)
