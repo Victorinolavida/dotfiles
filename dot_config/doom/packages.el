@@ -69,6 +69,9 @@
 ;; golangci-lint flycheck integration
 (package! flycheck-golangci-lint)
 
+;; Keep cursor vertically centered
+(package! centered-cursor-mode)
+
 
 ;; Doom's packages are pinned to a specific commit and updated from release to
 ;; release. The `unpin!' macro allows you to unpin single packages...
