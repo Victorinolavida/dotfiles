@@ -73,6 +73,7 @@ alias clear='clear && printf "\e[3J"'
 alias air='$(go env GOPATH)/bin/air'
 alias droplet="ssh -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7"
 alias viclavida="ssh -t -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7 ./magic.sh"
+alias cra="chezmoi re-add"
 
 # Key bindings
 bindkey -s ^o "tmux-sessionizer\n"
