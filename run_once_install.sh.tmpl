@@ -17,11 +17,13 @@ brew install \
   ripgrep \
   go \
   neovim \
-  yazi
+  yazi \
+  direnv
 
 brew install --cask \
   ghostty \
-  font-jetbrains-mono-nerd-font
+  font-jetbrains-mono-nerd-font \
+  font-intone-mono-nerd-font
 
 # Emacs (Doom) — emacs-mac with xwidgets for embedded browser support
 if ! has emacs; then
@@ -61,7 +63,7 @@ if ! has bat && ! has batcat; then
   fi
 fi
 
-sudo apt-get install -y fzf fd-find zoxide golang-go
+sudo apt-get install -y fzf fd-find zoxide golang-go direnv
 
 if has fdfind && ! has fd; then
   mkdir -p "$HOME/.local/bin"
@@ -139,10 +141,23 @@ if ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
   fc-cache -fv "$font_dir"
 fi
 
+# IntelliOne Mono Nerd Font
+if ! fc-list | grep -qi "IntelliOne Mono"; then
+  font_dir="$HOME/.local/share/fonts/IntoneMonoNerdFont"
+  version=$(curl -s "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest" \
+    | grep '"tag_name"' | sed 's/.*"\(v[^"]*\)".*/\1/')
+  curl -Lo /tmp/IntelliOneMono.zip \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${version}/IntelliOneMono.zip"
+  mkdir -p "$font_dir"
+  unzip -o /tmp/IntelliOneMono.zip -d "$font_dir"
+  rm /tmp/IntelliOneMono.zip
+  fc-cache -fv "$font_dir"
+fi
+
 {{ end -}}
 
 # ── Oh My Zsh (all platforms) ─────────────────────────────────────────────────
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
+if [ ! -f "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 fi
 
