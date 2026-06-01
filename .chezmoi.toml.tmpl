@@ -1,5 +1,13 @@
 sourceDir = "{{ .chezmoi.sourceDir }}"
 
 [data]
+  is_work = {{ promptBool "Is this a work machine?" }}
+{{- if promptBool "Is this a work machine?" }}
+  name = {{ promptString "Full name" | quote }}
+  email = {{ promptString "Work email" | quote }}
+  github_user = {{ promptString "GitHub username" | quote }}
+{{- else }}
   name = "Victorino Lavida"
-  email = "viclavida@gmail.com"
+  email = "victorino.lavida@gmail.com"
+  github_user = "Victorinolavida"
+{{- end }}
