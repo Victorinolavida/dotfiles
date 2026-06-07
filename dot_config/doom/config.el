@@ -29,6 +29,11 @@
 ;; refresh your font settings. If Emacs still can't find your font, it likely
 ;; wasn't installed correctly. Font issues are rarely Doom issues!
 
+;; IntelliOne Mono Nerd Font (installed via run_once_install.sh).
+;; macOS registers the monospace variant as "IntoneMono NFM".
+(setq doom-font     (font-spec :family "IntoneMono NFM" :size 14)
+      doom-big-font (font-spec :family "IntoneMono NFM" :size 20))
+
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
