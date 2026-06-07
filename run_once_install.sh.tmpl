@@ -24,7 +24,8 @@ brew install \
 brew install --cask \
   ghostty \
   font-jetbrains-mono-nerd-font \
-  font-intone-mono-nerd-font
+  font-intone-mono-nerd-font \
+  font-symbols-only-nerd-font
 
 # Emacs (Doom) — emacs-mac with xwidgets for embedded browser support
 if ! has emacs; then
@@ -147,6 +148,19 @@ if ! fc-list | grep -qi "IntelliOne Mono"; then
   mkdir -p "$font_dir"
   unzip -o /tmp/IntelliOneMono.zip -d "$font_dir"
   rm /tmp/IntelliOneMono.zip
+  fc-cache -fv "$font_dir"
+fi
+
+# Symbols Nerd Font — required by Doom's nerd-icons (modeline/dashboard/treemacs)
+if ! fc-list | grep -qi "Symbols Nerd Font"; then
+  font_dir="$HOME/.local/share/fonts/NerdFontsSymbolsOnly"
+  version=$(curl -s "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest" \
+    | grep '"tag_name"' | sed 's/.*"\(v[^"]*\)".*/\1/')
+  curl -Lo /tmp/NerdFontsSymbolsOnly.zip \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${version}/NerdFontsSymbolsOnly.zip"
+  mkdir -p "$font_dir"
+  unzip -o /tmp/NerdFontsSymbolsOnly.zip -d "$font_dir"
+  rm /tmp/NerdFontsSymbolsOnly.zip
   fc-cache -fv "$font_dir"
 fi
 
