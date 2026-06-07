@@ -18,7 +18,8 @@ brew install \
   go \
   neovim \
   yazi \
-  direnv
+  direnv \
+  fnm
 
 brew install --cask \
   ghostty \
@@ -32,11 +33,6 @@ if ! has emacs; then
   app_path="/opt/homebrew/opt/emacs-mac@29/Emacs.app"
   # cp -r not ln -sf: Spotlight does not index symlinks
   [ -d "$app_path" ] && cp -r "$app_path" /Applications/Emacs.app
-fi
-
-# fnm
-if ! has fnm; then
-  curl -fsSL https://fnm.vercel.app/install | bash
 fi
 
 {{ else if eq .chezmoi.os "linux" -}}
