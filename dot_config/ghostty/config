@@ -3,7 +3,7 @@
 # --- appearance ---
 font-family = JetBrainsMono Nerd Font
 font-size = 16
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 background-opacity = 1.0
 cursor-style = block
 cursor-style-blink = false
