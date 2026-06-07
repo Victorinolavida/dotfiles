@@ -95,30 +95,70 @@
 
 ;; Go debugger (delve via dape) — split layout like nvim dap-ui
 (after! dape
-  (setq dape-buffer-window-arrangement 'gud
-        dape-info-hide-mode-line nil
+  ;; ---- Layout ----
+  ;; 'left => info panels stack down the LEFT side, source stays full-height on
+  ;; the RIGHT, and the REPL sits along the bottom (dap-ui style).
+  ;; Other options: 'right (panels on right), 'gud (gdb-like), or nil.
+  (setq dape-buffer-window-arrangement 'left
+        dape-info-hide-mode-line t
         dape-stack-trace-levels 10)
 
+  ;; Which info buffers share a window (top group shows first):
+  ;;   pane 1: Locals (scope) + Watch
+  ;;   pane 2: Call stack + Threads
+  ;;   pane 3: Breakpoints (+ Modules/Sources)
+  (setq dape-info-buffer-window-groups
+        '((dape-info-scope-mode dape-info-watch-mode)
+          (dape-info-stack-mode dape-info-threads-mode)
+          (dape-info-breakpoints-mode dape-info-modules-mode dape-info-sources-mode)))
+
+  ;; ---- Breakpoints ----
+  ;; Render breakpoint indicators (fringe in GUI, "B" in the margin in a
+  ;; terminal) in every prog-mode buffer, and make them mouse-clickable.
+  (dape-breakpoint-global-mode 1)
+
+  ;; Persist breakpoints across restarts.
+  (setq dape-default-breakpoints-file
+        (expand-file-name "dape-breakpoints" doom-cache-dir))
+  (add-hook 'dape-start-hook #'dape-breakpoint-load)
+  (add-hook 'kill-emacs-hook #'dape-breakpoint-save)
+
+  ;; Flash the line we stopped on so it's easy to spot.
+  (add-hook 'dape-display-source-hook #'pulse-momentary-highlight-one-line)
+
+  ;; ---- Go debug entry points (delve via DAP) ----
+  ;; dape already ships a correct built-in `dlv' config; these add explicit
+  ;; launch vs. test variants. The key fix vs. before: `ensure',
+  ;; `command-cwd dape-command-cwd', and `port :autoport'. Without
+  ;; `port :autoport' the `:autoport' placeholder in command-args is never
+  ;; substituted, so delve is told to listen on the literal "127.0.0.1::autoport"
+  ;; and the session never starts (hence no info panels / no stop highlight).
   (add-to-list 'dape-configs
                '(go-debug-main
                  modes (go-mode go-ts-mode)
-                 command (executable-find "dlv")
+                 ensure dape-ensure-command
+                 command "dlv"
                  command-args ("dap" "--listen" "127.0.0.1::autoport")
-                 command-cwd dape-cwd-fn
+                 command-cwd dape-command-cwd
+                 port :autoport
                  :request "launch"
-                 :mode "debug"
                  :type "go"
+                 :mode "debug"
+                 :cwd "."
                  :program "."))
 
   (add-to-list 'dape-configs
                '(go-debug-test
                  modes (go-mode go-ts-mode)
-                 command (executable-find "dlv")
+                 ensure dape-ensure-command
+                 command "dlv"
                  command-args ("dap" "--listen" "127.0.0.1::autoport")
-                 command-cwd dape-cwd-fn
+                 command-cwd dape-command-cwd
+                 port :autoport
                  :request "launch"
-                 :mode "test"
                  :type "go"
+                 :mode "test"
+                 :cwd "."
                  :program ".")))
 
 ;; Go test runner (go.work workspace aware)
@@ -163,18 +203,31 @@
                  (file-name-directory (buffer-file-name)))))
     (compile (format "cd %s && go run %s" dir (buffer-file-name)))))
 
+;; Global debug prefix (SPC d) — dape works for any language, so bind it
+;; on the leader rather than the Go localleader.
+(map! :leader
+      (:prefix ("d" . "debug")
+       :desc "Start / pick config"  "d" #'dape
+       :desc "Restart"              "r" #'dape-restart
+       :desc "Quit"                 "q" #'dape-quit
+       :desc "Continue"             "c" #'dape-continue
+       :desc "Next (step over)"     "n" #'dape-next
+       :desc "Step in"              "i" #'dape-step-in
+       :desc "Step out"             "o" #'dape-step-out
+       :desc "Toggle breakpoint"    "b" #'dape-breakpoint-toggle
+       :desc "Conditional bp"       "B" #'dape-breakpoint-expression
+       :desc "Log breakpoint"       "l" #'dape-breakpoint-log
+       :desc "Remove all bps"       "K" #'dape-breakpoint-remove-all
+       :desc "Eval expression"      "e" #'dape-evaluate-expression
+       :desc "Watch dwim"           "w" #'dape-watch-dwim
+       :desc "REPL"                 "R" #'dape-repl
+       :desc "Info panels"          "I" #'dape-info
+       :desc "Stack up"             "k" #'dape-stack-select-up
+       :desc "Stack down"           "j" #'dape-stack-select-down))
+
 (after! go-mode
   (map! :localleader
         :map go-mode-map
-        (:prefix ("d" . "debug")
-         :desc "Debug program"       "d" #'dape
-         :desc "Debug last"          "l" #'dape-restart
-         :desc "Toggle breakpoint"   "b" #'dape-breakpoint-toggle
-         :desc "Continue"            "c" #'dape-continue
-         :desc "Next"                "n" #'dape-next
-         :desc "Step in"             "i" #'dape-step-in
-         :desc "Step out"            "o" #'dape-step-out
-         :desc "Quit"                "q" #'dape-quit)
         (:prefix ("r" . "run")
          :desc "Run file"       "r" #'+go/run)
         (:prefix ("t" . "test")
