@@ -1,8 +1,10 @@
 sourceDir = "{{ .chezmoi.sourceDir }}"
 
+{{- $isWork := promptBool "Is this a work machine? (y/n)" }}
+
 [data]
-  is_work = {{ promptBool "Is this a work machine?" }}
-{{- if promptBool "Is this a work machine?" }}
+  is_work = {{ $isWork }}
+{{- if $isWork }}
   name = {{ promptString "Full name" | quote }}
   email = {{ promptString "Work email" | quote }}
   github_user = {{ promptString "GitHub username" | quote }}
