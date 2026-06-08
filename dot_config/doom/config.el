@@ -29,6 +29,11 @@
 ;; refresh your font settings. If Emacs still can't find your font, it likely
 ;; wasn't installed correctly. Font issues are rarely Doom issues!
 
+;; IntelliOne Mono Nerd Font (installed via run_once_install.sh).
+;; macOS registers the monospace variant as "IntoneMono NFM".
+(setq doom-font     (font-spec :family "IntoneMono NFM" :size 14)
+      doom-big-font (font-spec :family "IntoneMono NFM" :size 20))
+
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
@@ -84,36 +89,97 @@
         :n "K" #'eldoc-box-help-at-point
         :leader
         (:prefix ("c" . "code")
-         :desc "Hover doc"    "K" #'eglot-help-at-point
+         :desc "Hover doc"    "K" #'eldoc-box-help-at-point
          :desc "Rename"       "r" #'eglot-rename
          :desc "Code actions" "a" #'eglot-code-actions)))
 
+;; Load dape on the first opened file. `dape-breakpoint-global-mode' is the
+;; one autoloaded entry point that pulls in the whole dape feature, so this
+;; both defines every `dape-*' command (no "commandp" errors from the SPC d
+;; bindings) and lets you set/see breakpoints before ever starting a session.
+(add-hook 'doom-first-file-hook #'dape-breakpoint-global-mode)
+
 ;; Go debugger (delve via dape) — split layout like nvim dap-ui
 (after! dape
-  (setq dape-buffer-window-arrangement 'gud
-        dape-info-hide-mode-line nil
+  ;; ---- Layout ----
+  ;; 'left => info panels stack down the LEFT side, source stays full-height on
+  ;; the RIGHT, and the REPL sits along the bottom (dap-ui style).
+  ;; Other options: 'right (panels on right), 'gud (gdb-like), or nil.
+  (setq dape-buffer-window-arrangement 'left
+        dape-info-hide-mode-line t
         dape-stack-trace-levels 10)
 
+  ;; ---- UI niceties ----
+  ;; NOTE: `dape-inlay-hints' is left OFF. Its updater runs on a debounce
+  ;; timer that fires `:variables' jsonrpc requests for the stopped frame,
+  ;; which was throwing "Error running timer / jsonrpc--json-encode: Wrong
+  ;; type argument: consp #<marker ...>" during sessions. Values are still
+  ;; available on demand via eldoc hover (`K') and the Locals panel.
+  (setq dape-info-variable-table-aligned t   ; align Locals/Watch columns
+        dape-inlay-hints nil                  ; disabled: see note above
+        dape-repl-echo-shell-output t)        ; program stdout echoes into the REPL
+
+  ;; Which info buffers share a window (top group shows first):
+  ;;   pane 1: Locals (scope) + Watch
+  ;;   pane 2: Call stack + Threads
+  ;;   pane 3: Breakpoints (+ Modules/Sources)
+  (setq dape-info-buffer-window-groups
+        '((dape-info-scope-mode dape-info-watch-mode)
+          (dape-info-stack-mode dape-info-threads-mode)
+          (dape-info-breakpoints-mode dape-info-modules-mode dape-info-sources-mode)))
+
+  ;; ---- Breakpoints ----
+  ;; `dape-breakpoint-global-mode' (which renders breakpoint indicators in
+  ;; every buffer) is enabled from `doom-first-file-hook' below, not here, so
+  ;; that dape loads early enough to set breakpoints before any session.
+
+  ;; Persist breakpoints across *Emacs* restarts.
+  ;; IMPORTANT: `dape-breakpoint-load' removes ALL current breakpoints before
+  ;; loading, so it must NOT run on `dape-start-hook' — that wipes every
+  ;; breakpoint each time you (re)start the debugger. Load once at startup,
+  ;; save on exit.
+  (setq dape-default-breakpoints-file
+        (expand-file-name "dape-breakpoints" doom-cache-dir))
+  (add-hook 'kill-emacs-hook #'dape-breakpoint-save)
+  (when (file-exists-p dape-default-breakpoints-file)
+    (dape-breakpoint-load))
+
+  ;; Flash the line we stopped on so it's easy to spot.
+  (add-hook 'dape-display-source-hook #'pulse-momentary-highlight-one-line)
+
+  ;; ---- Go debug entry points (delve via DAP) ----
+  ;; dape already ships a correct built-in `dlv' config; these add explicit
+  ;; launch vs. test variants. The key fix vs. before: `ensure',
+  ;; `command-cwd dape-command-cwd', and `port :autoport'. Without
+  ;; `port :autoport' the `:autoport' placeholder in command-args is never
+  ;; substituted, so delve is told to listen on the literal "127.0.0.1::autoport"
+  ;; and the session never starts (hence no info panels / no stop highlight).
   (add-to-list 'dape-configs
                '(go-debug-main
                  modes (go-mode go-ts-mode)
-                 command "/Users/victorinolavida/go/bin/dlv"
+                 ensure dape-ensure-command
+                 command "dlv"
                  command-args ("dap" "--listen" "127.0.0.1::autoport")
-                 command-cwd dape-cwd-fn
+                 command-cwd dape-command-cwd
+                 port :autoport
                  :request "launch"
-                 :mode "debug"
                  :type "go"
+                 :mode "debug"
+                 :cwd "."
                  :program "."))
 
   (add-to-list 'dape-configs
                '(go-debug-test
                  modes (go-mode go-ts-mode)
-                 command "/Users/victorinolavida/go/bin/dlv"
+                 ensure dape-ensure-command
+                 command "dlv"
                  command-args ("dap" "--listen" "127.0.0.1::autoport")
-                 command-cwd dape-cwd-fn
+                 command-cwd dape-command-cwd
+                 port :autoport
                  :request "launch"
-                 :mode "test"
                  :type "go"
+                 :mode "test"
+                 :cwd "."
                  :program ".")))
 
 ;; Go test runner (go.work workspace aware)
@@ -158,18 +224,31 @@
                  (file-name-directory (buffer-file-name)))))
     (compile (format "cd %s && go run %s" dir (buffer-file-name)))))
 
+;; Global debug prefix (SPC d) — dape works for any language, so bind it
+;; on the leader rather than the Go localleader.
+(map! :leader
+      (:prefix ("d" . "debug")
+       :desc "Start / pick config"  "d" #'dape
+       :desc "Restart"              "r" #'dape-restart
+       :desc "Quit"                 "q" #'dape-quit
+       :desc "Continue"             "c" #'dape-continue
+       :desc "Next (step over)"     "n" #'dape-next
+       :desc "Step in"              "i" #'dape-step-in
+       :desc "Step out"             "o" #'dape-step-out
+       :desc "Toggle breakpoint"    "b" #'dape-breakpoint-toggle
+       :desc "Conditional bp"       "B" #'dape-breakpoint-expression
+       :desc "Log breakpoint"       "l" #'dape-breakpoint-log
+       :desc "Remove all bps"       "K" #'dape-breakpoint-remove-all
+       :desc "Eval expression"      "e" #'dape-evaluate-expression
+       :desc "Watch dwim"           "w" #'dape-watch-dwim
+       :desc "REPL"                 "R" #'dape-repl
+       :desc "Info panels"          "I" #'dape-info
+       :desc "Stack up"             "k" #'dape-stack-select-up
+       :desc "Stack down"           "j" #'dape-stack-select-down))
+
 (after! go-mode
   (map! :localleader
         :map go-mode-map
-        (:prefix ("d" . "debug")
-         :desc "Debug program"       "d" #'dape
-         :desc "Debug last"          "l" #'dape-restart
-         :desc "Toggle breakpoint"   "b" #'dape-breakpoint-toggle
-         :desc "Continue"            "c" #'dape-continue
-         :desc "Next"                "n" #'dape-next
-         :desc "Step in"             "i" #'dape-step-in
-         :desc "Step out"            "o" #'dape-step-out
-         :desc "Quit"                "q" #'dape-quit)
         (:prefix ("r" . "run")
          :desc "Run file"       "r" #'+go/run)
         (:prefix ("t" . "test")
@@ -247,6 +326,8 @@
 ;; org-roam (Obsidian alternative — zettelkasten + backlinks)
 (after! org-roam
   (setq org-roam-directory "~/org/roam/")
+  ;; org-roam-db-autosync-mode errors out if the directory is missing
+  (make-directory org-roam-directory t)
   (org-roam-db-autosync-mode)
   (map! :leader
         (:prefix ("n r" . "roam")
@@ -359,102 +440,6 @@
                      (list 'Info-mode 'term-mode 'eshell-mode 'shell-mode 'erc-mode)))
       (centered-cursor-mode))))
 (my-global-centered-cursor-mode 1)
-
-(use-package treesit
-  :mode (("\\.tsx\\'" . tsx-ts-mode)
-         ("\\.js\\'"  . typescript-ts-mode)
-         ("\\.mjs\\'" . typescript-ts-mode)
-         ("\\.mts\\'" . typescript-ts-mode)
-         ("\\.cjs\\'" . typescript-ts-mode)
-         ("\\.ts\\'"  . typescript-ts-mode)
-         ("\\.jsx\\'" . tsx-ts-mode)
-         ("\\.json\\'" .  json-ts-mode)
-         ("\\.Dockerfile\\'" . dockerfile-ts-mode)
-         ("\\.prisma\\'" . prisma-ts-mode)
-         ;; More modes defined here...
-         )
-  :preface
-  (defun os/setup-install-grammars ()
-    "Install Tree-sitter grammars if they are absent."
-    (interactive)
-    (dolist (grammar
-             '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
-               (bash "https://github.com/tree-sitter/tree-sitter-bash")
-               (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
-               (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.21.2" "src"))
-               (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
-               (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
-               (go "https://github.com/tree-sitter/tree-sitter-go" "v0.20.0")
-               (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-               (make "https://github.com/alemuller/tree-sitter-make")
-               (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-               (cmake "https://github.com/uyha/tree-sitter-cmake")
-               (c "https://github.com/tree-sitter/tree-sitter-c")
-               (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-               (toml "https://github.com/tree-sitter/tree-sitter-toml")
-               (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
-               (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
-               (prisma "https://github.com/victorhqc/tree-sitter-prisma")))
-      (add-to-list 'treesit-language-source-alist grammar)
-      ;; Only install `grammar' if we don't already have it
-      ;; installed. However, if you want to *update* a grammar then
-      ;; this obviously prevents that from happening.
-      (unless (treesit-language-available-p (car grammar))
-        (treesit-install-language-grammar (car grammar)))))
-
-  ;; Optional, but recommended. Tree-sitter enabled major modes are
-  ;; distinct from their ordinary counterparts.
-  ;;
-  ;; You can remap major modes with `major-mode-remap-alist'. Note
-  ;; that this does *not* extend to hooks! Make sure you migrate them
-  ;; also
-  (dolist (mapping
-           '((python-mode . python-ts-mode)
-             (css-mode . css-ts-mode)
-             (typescript-mode . typescript-ts-mode)
-             (js-mode . typescript-ts-mode)
-             (js2-mode . typescript-ts-mode)
-             (c-mode . c-ts-mode)
-             (c++-mode . c++-ts-mode)
-             (c-or-c++-mode . c-or-c++-ts-mode)
-             (bash-mode . bash-ts-mode)
-             (css-mode . css-ts-mode)
-             (json-mode . json-ts-mode)
-             (js-json-mode . json-ts-mode)
-             (sh-mode . bash-ts-mode)
-             (sh-base-mode . bash-ts-mode)))
-    (add-to-list 'major-mode-remap-alist mapping))
-  :config
-  (os/setup-install-grammars))
-
-;; (use-package lsp-eslint
-;;   :demand t
-;;   :after lsp-mode)
-
-(after! lsp-mode
-  (setq lsp-gopls-staticcheck t
-        lsp-gopls-complete-unimported t
-        lsp-gopls-use-placeholders t))
-
-(after! go-mode
-  (add-hook 'before-save-hook #'lsp-format-buffer nil t)
-  (add-hook 'before-save-hook #'lsp-organize-imports nil t))
-
-
-(defun +go/run-gotest-ui ()
-  "Run gotest-ui in the project root."
-  (interactive)
-  (let ((default-directory (projectile-project-root)))
-    (ansi-term "gotest-ui ./..." "gotest-ui")
-    ;; After returning, restore highlighting
-    (add-hook 'term-exec-hook
-              (lambda (&rest _)
-                (dolist (buf (buffer-list))
-                  (with-current-buffer buf
-                    (when (eq major-mode 'go-mode)
-                      (font-lock-fontify-buffer)))))
-              nil 'local)))
 
 (defun +go/run-gotest-ui ()
   "Run gotest-ui in vterm so it doesn't break syntax highlighting."

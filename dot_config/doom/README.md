@@ -82,7 +82,7 @@ export SPOTIFY_CLIENT_SECRET="your_client_secret"
 | `(format +onsave)`      | Apheleia async formatter         |
 | `tree-sitter`           | Tree-sitter syntax highlighting  |
 | `treemacs`              | File tree sidebar                |
-| `(org +roam2)`          | Org-roam zettelkasten            |
+| `(org +roam)`           | Org-roam zettelkasten            |
 | `data` / `yaml`         | JSON, TOML, YAML support         |
 | `eww`                   | Text browser (fallback)          |
 | `nav-flash`             | Cursor flash after jumps         |
