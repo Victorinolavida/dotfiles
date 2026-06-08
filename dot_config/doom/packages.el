@@ -53,6 +53,9 @@
 ;; Floating hover doc frame (replaces lsp-ui-doc-glance)
 (package! eldoc-box)
 
+;; Fuzzy workspace-symbol search across the whole project via eglot + consult
+(package! consult-eglot)
+
 ;; Spotify controller
 (package! smudge)
 

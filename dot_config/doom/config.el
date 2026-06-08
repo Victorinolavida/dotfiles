@@ -93,6 +93,15 @@
          :desc "Rename"       "r" #'eglot-rename
          :desc "Code actions" "a" #'eglot-code-actions)))
 
+;; Fuzzy workspace-symbol jump across the whole project (SPC c j).
+(use-package! consult-eglot
+  :after eglot
+  :init
+  (map! :map eglot-mode-map
+        :leader
+        (:prefix ("c" . "code")
+         :desc "Workspace symbols" "j" #'consult-eglot-symbols)))
+
 ;; Load dape on the first opened file. `dape-breakpoint-global-mode' is the
 ;; one autoloaded entry point that pulls in the whole dape feature, so this
 ;; both defines every `dape-*' command (no "commandp" errors from the SPC d
