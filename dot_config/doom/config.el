@@ -93,6 +93,12 @@
          :desc "Rename"       "r" #'eglot-rename
          :desc "Code actions" "a" #'eglot-code-actions)))
 
+;; Load dape on the first opened file. `dape-breakpoint-global-mode' is the
+;; one autoloaded entry point that pulls in the whole dape feature, so this
+;; both defines every `dape-*' command (no "commandp" errors from the SPC d
+;; bindings) and lets you set/see breakpoints before ever starting a session.
+(add-hook 'doom-first-file-hook #'dape-breakpoint-global-mode)
+
 ;; Go debugger (delve via dape) — split layout like nvim dap-ui
 (after! dape
   ;; ---- Layout ----
@@ -102,6 +108,16 @@
   (setq dape-buffer-window-arrangement 'left
         dape-info-hide-mode-line t
         dape-stack-trace-levels 10)
+
+  ;; ---- UI niceties ----
+  ;; NOTE: `dape-inlay-hints' is left OFF. Its updater runs on a debounce
+  ;; timer that fires `:variables' jsonrpc requests for the stopped frame,
+  ;; which was throwing "Error running timer / jsonrpc--json-encode: Wrong
+  ;; type argument: consp #<marker ...>" during sessions. Values are still
+  ;; available on demand via eldoc hover (`K') and the Locals panel.
+  (setq dape-info-variable-table-aligned t   ; align Locals/Watch columns
+        dape-inlay-hints nil                  ; disabled: see note above
+        dape-repl-echo-shell-output t)        ; program stdout echoes into the REPL
 
   ;; Which info buffers share a window (top group shows first):
   ;;   pane 1: Locals (scope) + Watch
@@ -113,15 +129,20 @@
           (dape-info-breakpoints-mode dape-info-modules-mode dape-info-sources-mode)))
 
   ;; ---- Breakpoints ----
-  ;; Render breakpoint indicators (fringe in GUI, "B" in the margin in a
-  ;; terminal) in every prog-mode buffer, and make them mouse-clickable.
-  (dape-breakpoint-global-mode 1)
+  ;; `dape-breakpoint-global-mode' (which renders breakpoint indicators in
+  ;; every buffer) is enabled from `doom-first-file-hook' below, not here, so
+  ;; that dape loads early enough to set breakpoints before any session.
 
-  ;; Persist breakpoints across restarts.
+  ;; Persist breakpoints across *Emacs* restarts.
+  ;; IMPORTANT: `dape-breakpoint-load' removes ALL current breakpoints before
+  ;; loading, so it must NOT run on `dape-start-hook' — that wipes every
+  ;; breakpoint each time you (re)start the debugger. Load once at startup,
+  ;; save on exit.
   (setq dape-default-breakpoints-file
         (expand-file-name "dape-breakpoints" doom-cache-dir))
-  (add-hook 'dape-start-hook #'dape-breakpoint-load)
   (add-hook 'kill-emacs-hook #'dape-breakpoint-save)
+  (when (file-exists-p dape-default-breakpoints-file)
+    (dape-breakpoint-load))
 
   ;; Flash the line we stopped on so it's easy to spot.
   (add-hook 'dape-display-source-hook #'pulse-momentary-highlight-one-line)
