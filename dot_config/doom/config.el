@@ -115,13 +115,6 @@
          :desc "Rename"       "r" #'eglot-rename
          :desc "Code actions" "a" #'eglot-code-actions)))
 
-;; Speed up eglot by routing LSP JSON through the emacs-lsp-booster binary.
-;; Requires the `emacs-lsp-booster' executable on PATH (cargo install
-;; emacs-lsp-booster). Falls back gracefully (logs a warning) if missing.
-(use-package! eglot-booster
-  :after eglot
-  :config (eglot-booster-mode))
-
 ;; Load dape on the first opened file. `dape-breakpoint-global-mode' is the
 ;; one autoloaded entry point that pulls in the whole dape feature, so this
 ;; both defines every `dape-*' command (no "commandp" errors from the SPC d
