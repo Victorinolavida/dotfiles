@@ -51,6 +51,17 @@
 (setq gc-cons-threshold (* 100 1024 1024)
       read-process-output-max (* 1024 1024))
 
+;; Make CLI tools installed outside the GUI's PATH discoverable (dlv, gopls,
+;; gofumpt, golangci-lint, emacs-lsp-booster, …). GUI Emacs on macOS doesn't
+;; inherit the shell PATH, so add Go's bin dir and Homebrew/Cargo bins.
+(dolist (dir (list (or (getenv "GOBIN")
+                       (expand-file-name "bin" (or (getenv "GOPATH") "~/go")))
+                   "/opt/homebrew/bin"
+                   (expand-file-name "~/.cargo/bin")))
+  (when (file-directory-p dir)
+    (add-to-list 'exec-path dir)
+    (setenv "PATH" (concat dir path-separator (getenv "PATH")))))
+
 ;; Eglot: lighter LSP client, ~30% faster startup vs lsp-mode
 (after! eglot
   (setq eglot-autoshutdown t
@@ -84,6 +95,17 @@
 
   (add-hook 'eglot-managed-mode-hook #'eglot-inlay-hints-mode)
 
+  ;; Go: organize imports (add/remove) on save via gopls code action — apheleia
+  ;; only formats, it doesn't touch imports. No-op when eglot isn't managing.
+  (defun +go/eglot-organize-imports ()
+    (when (eglot-managed-p)
+      (ignore-errors
+        (eglot-code-action-organize-imports (point-min) (point-max)))))
+  (dolist (hook '(go-mode-hook go-ts-mode-hook))
+    (add-hook hook
+              (lambda ()
+                (add-hook 'before-save-hook #'+go/eglot-organize-imports nil t))))
+
   ;; K = hover doc (replaces lsp-ui-doc-glance)
   (map! :map eglot-mode-map
         :n "K" #'eldoc-box-help-at-point
@@ -92,6 +114,13 @@
          :desc "Hover doc"    "K" #'eldoc-box-help-at-point
          :desc "Rename"       "r" #'eglot-rename
          :desc "Code actions" "a" #'eglot-code-actions)))
+
+;; Speed up eglot by routing LSP JSON through the emacs-lsp-booster binary.
+;; Requires the `emacs-lsp-booster' executable on PATH (cargo install
+;; emacs-lsp-booster). Falls back gracefully (logs a warning) if missing.
+(use-package! eglot-booster
+  :after eglot
+  :config (eglot-booster-mode))
 
 ;; Load dape on the first opened file. `dape-breakpoint-global-mode' is the
 ;; one autoloaded entry point that pulls in the whole dape feature, so this
