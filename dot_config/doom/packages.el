@@ -53,6 +53,11 @@
 ;; Floating hover doc frame (replaces lsp-ui-doc-glance)
 (package! eldoc-box)
 
+;; Speed up eglot by piping LSP traffic through the emacs-lsp-booster binary
+;; (install the binary with: cargo install emacs-lsp-booster)
+(package! eglot-booster
+  :recipe (:host github :repo "jdtsmith/eglot-booster"))
+
 ;; Spotify controller
 (package! smudge)
 
