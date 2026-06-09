@@ -61,9 +61,6 @@
 ;; Fuzzy workspace-symbol search across the whole project via eglot + consult
 (package! consult-eglot)
 
-;; Spotify controller
-(package! smudge)
-
 ;; HTTP client (org-mode based, more powerful than restclient)
 (package! verb)
 
