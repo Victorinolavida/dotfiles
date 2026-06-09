@@ -31,8 +31,11 @@
 
 ;; IntelliOne Mono Nerd Font (installed via run_once_install.sh).
 ;; macOS registers the monospace variant as "IntoneMono NFM".
-(setq doom-font     (font-spec :family "IntoneMono NFM" :size 14)
-      doom-big-font (font-spec :family "IntoneMono NFM" :size 20))
+;; `doom-symbol-font' points at the Symbols Nerd Font (also installed by the
+;; script) so glyphs/icons used by nerd-icons render correctly.
+(setq doom-font        (font-spec :family "IntoneMono NFM" :size 14)
+      doom-big-font    (font-spec :family "IntoneMono NFM" :size 20)
+      doom-symbol-font (font-spec :family "Symbols Nerd Font Mono"))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
@@ -114,6 +117,22 @@
          :desc "Hover doc"    "K" #'eldoc-box-help-at-point
          :desc "Rename"       "r" #'eglot-rename
          :desc "Code actions" "a" #'eglot-code-actions)))
+
+;; Speed up eglot by routing LSP JSON through the emacs-lsp-booster binary.
+;; Requires the `emacs-lsp-booster' executable on PATH (cargo install
+;; emacs-lsp-booster). Falls back gracefully (logs a warning) if missing.
+(use-package! eglot-booster
+  :after eglot
+  :config (eglot-booster-mode))
+
+;; Fuzzy workspace-symbol jump across the whole project (SPC c j).
+(use-package! consult-eglot
+  :after eglot
+  :init
+  (map! :map eglot-mode-map
+        :leader
+        (:prefix ("c" . "code")
+         :desc "Workspace symbols" "j" #'consult-eglot-symbols)))
 
 ;; Load dape on the first opened file. `dape-breakpoint-global-mode' is the
 ;; one autoloaded entry point that pulls in the whole dape feature, so this
@@ -367,25 +386,6 @@
        :desc "Browse URL at point" "p" (cmd! (xwidget-webkit-browse-url (thing-at-point 'url t)))
        :desc "Back"                "b" #'xwidget-webkit-back
        :desc "Reload"              "r" #'xwidget-webkit-reload))
-
-;; Smudge — Spotify controller (needs OAuth2 credentials)
-;; Get client-id/secret at https://developer.spotify.com/dashboard
-(use-package! smudge
-  :config
-  (setq smudge-oauth2-client-id     (getenv "SPOTIFY_CLIENT_ID")
-        smudge-oauth2-client-secret (getenv "SPOTIFY_CLIENT_SECRET")
-        smudge-transport 'connect))
-
-(after! smudge
-  (map! :leader
-        (:prefix ("o S" . "spotify")
-         :desc "Track search"  "s" #'smudge-track-search
-         :desc "My playlists"  "l" #'smudge-my-playlists
-         :desc "Toggle play"   "t" #'smudge-controller-toggle-play
-         :desc "Next"          "n" #'smudge-controller-next-track
-         :desc "Prev"          "p" #'smudge-controller-previous-track
-         :desc "Volume +"      "=" #'smudge-controller-volume-up
-         :desc "Volume -"      "-" #'smudge-controller-volume-down)))
 
 ;; Verb — HTTP client in org-mode (Bruno/Postman alternative)
 (use-package! verb

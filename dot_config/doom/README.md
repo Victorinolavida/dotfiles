@@ -1,6 +1,6 @@
 # Doom Emacs Config
 
-Multi-language development environment (Go primary) with eglot LSP, debugger, formatters, org-roam, Spotify, browser, HTTP client, and PostgreSQL browser.
+Multi-language development environment (Go primary) with eglot LSP, debugger, formatters, org-roam, browser, HTTP client, and PostgreSQL browser.
 
 ## Requirements
 
@@ -56,15 +56,6 @@ pip install pyright
 
 ```bash
 rustup component add rust-analyzer
-```
-
-### Spotify (smudge)
-
-Create an app at https://developer.spotify.com/dashboard, then set env vars:
-
-```bash
-export SPOTIFY_CLIENT_ID="your_client_id"
-export SPOTIFY_CLIENT_SECRET="your_client_secret"
 ```
 
 ---
@@ -174,18 +165,6 @@ export SPOTIFY_CLIENT_SECRET="your_client_secret"
 | `SPC o w p` | Open URL at point   |
 | `SPC o w b` | Back                |
 | `SPC o w r` | Reload              |
-
-### Spotify (`SPC o S`)
-
-| Key           | Action          |
-| ------------- | --------------- |
-| `SPC o S s`   | Search tracks   |
-| `SPC o S l`   | My playlists    |
-| `SPC o S t`   | Toggle play     |
-| `SPC o S n`   | Next track      |
-| `SPC o S p`   | Previous track  |
-| `SPC o S =`   | Volume up       |
-| `SPC o S -`   | Volume down     |
 
 ### HTTP client — verb (`C-c C-r` in org)
 

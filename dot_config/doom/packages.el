@@ -58,8 +58,8 @@
 (package! eglot-booster
   :recipe (:host github :repo "jdtsmith/eglot-booster"))
 
-;; Spotify controller
-(package! smudge)
+;; Fuzzy workspace-symbol search across the whole project via eglot + consult
+(package! consult-eglot)
 
 ;; HTTP client (org-mode based, more powerful than restclient)
 (package! verb)
