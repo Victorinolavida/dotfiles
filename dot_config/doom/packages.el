@@ -58,6 +58,9 @@
 (package! eglot-booster
   :recipe (:host github :repo "jdtsmith/eglot-booster"))
 
+;; Fuzzy workspace-symbol search across the whole project via eglot + consult
+(package! consult-eglot)
+
 ;; Spotify controller
 (package! smudge)
 
