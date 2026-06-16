@@ -22,10 +22,15 @@ brew install \
   fnm
 
 brew install --cask \
+  nikitabobko/tap/aerospace \
   ghostty \
   font-jetbrains-mono-nerd-font \
   font-intone-mono-nerd-font \
   font-symbols-only-nerd-font
+
+# Ghostty: open new windows as separate native windows, not macOS tabs,
+# so AeroSpace can tile each one (default tabbing mode merges them into tabs)
+defaults write com.mitchellh.ghostty AppleWindowTabbingMode -string manual
 
 # Emacs (Doom) — emacs-mac with xwidgets for embedded browser support
 if ! has emacs; then
