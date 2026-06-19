@@ -77,6 +77,7 @@ alias cra="chezmoi re-add"
 
 # Key bindings
 bindkey -s ^o "tmux-sessionizer\n"
+bindkey '^f' fzf-file-widget
 
 # fzf
 if command -v fzf &>/dev/null; then
