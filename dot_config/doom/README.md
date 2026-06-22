@@ -56,7 +56,33 @@ pip install pyright
 
 ```bash
 rustup component add rust-analyzer
+rustup component add clippy        # rust-analyzer runs clippy for diagnostics
 ```
+
+### YAML / docker-compose / Kubernetes manifests
+
+```bash
+npm install -g yaml-language-server
+```
+
+Schemas are pulled automatically from SchemaStore (GitHub Actions,
+docker-compose, etc.). For Kubernetes manifests, add a modeline at the top of
+the file so the server validates against the right schema:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0-standalone-strict/deployment.json
+```
+
+### Docker
+
+```bash
+npm install -g dockerfile-language-server-nodejs   # docker-langserver
+```
+
+### Kubernetes (cluster UI)
+
+`SPC o k k` opens a magit-style overview of the cluster in the current
+`kubectl` context. Requires `kubectl` on `PATH`.
 
 ---
 
@@ -69,6 +95,9 @@ rustup component add rust-analyzer
 | `(javascript +lsp)`     | JS/TS + typescript-language-server |
 | `(python +lsp +pyright)`| Python + pyright                 |
 | `(rust +lsp)`           | Rust + rust-analyzer             |
+| `(yaml +lsp)`           | YAML + yaml-language-server      |
+| `(docker +lsp)`         | Dockerfile + docker-langserver   |
+| `kubernetes`            | Cluster overview UI (`SPC o k k`)|
 | `debugger`              | DAP / dape (Delve for Go)        |
 | `(format +onsave)`      | Apheleia async formatter         |
 | `tree-sitter`           | Tree-sitter syntax highlighting  |
@@ -139,6 +168,26 @@ rustup component add rust-analyzer
 | `SPC m s a` | Add struct tag    |
 | `SPC m s r` | Remove struct tag |
 | `SPC m s c` | Clear all tags    |
+
+### Rust — Cargo (`SPC m b` / `SPC m t`)
+
+Provided by the `rust` module (rustic):
+
+| Key         | Action         |
+| ----------- | -------------- |
+| `SPC m b b` | cargo build    |
+| `SPC m b c` | cargo check    |
+| `SPC m b C` | cargo clippy   |
+| `SPC m b r` | cargo run      |
+| `SPC m b f` | cargo fmt      |
+| `SPC m t a` | cargo test all |
+| `SPC m t t` | test at point  |
+
+### Kubernetes (`SPC o k`)
+
+| Key         | Action                  |
+| ----------- | ----------------------- |
+| `SPC o k k` | Cluster overview        |
 
 ### File tree (`SPC o p`)
 

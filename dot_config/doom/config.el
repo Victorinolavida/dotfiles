@@ -94,7 +94,28 @@
                       :constantValues         t
                       :functionTypeParameters t
                       :parameterNames         t
-                      :rangeVariableTypes     t))))
+                      :rangeVariableTypes     t))
+      ;; rust-analyzer: clippy for diagnostics, all features, proc-macro
+      ;; expansion, and a rich set of inlay hints (rendered by
+      ;; eglot-inlay-hints-mode, enabled in the managed-mode-hook above).
+      :rust-analyzer (:check (:command "clippy")
+                      :cargo (:buildScripts (:enable t)
+                              :features "all")
+                      :procMacro (:enable t)
+                      :inlayHints (:bindingModeHints      (:enable t)
+                                   :closureReturnTypeHints (:enable "always")
+                                   :lifetimeElisionHints   (:enable "always"
+                                                            :useParameterNames t)))
+      ;; yaml-language-server: validation, hover, completion, and automatic
+      ;; schema association from SchemaStore (GitHub Actions, docker-compose,
+      ;; etc.). For Kubernetes manifests add a modeline at the top of the file:
+      ;;   # yaml-language-server: $schema=<url-to-k8s-schema>
+      ;; or use the kubernetes-json-schema URLs per resource kind.
+      :yaml (:format       (:enable t)
+             :validate     t
+             :hover        t
+             :completion   t
+             :schemaStore  (:enable t))))
 
   (add-hook 'eglot-managed-mode-hook #'eglot-inlay-hints-mode)
 
@@ -133,6 +154,33 @@
         :leader
         (:prefix ("c" . "code")
          :desc "Workspace symbols" "j" #'consult-eglot-symbols)))
+
+;; docker-compose-mode — compose files get yaml-language-server (schema from
+;; SchemaStore) just like plain YAML. docker-compose-mode derives from
+;; yaml-mode but Doom runs the *exact* major-mode's local-vars-hook, so wire
+;; eglot up explicitly here.
+(use-package! docker-compose-mode
+  :defer t
+  :config
+  (after! eglot
+    (add-to-list 'eglot-server-programs
+                 '(docker-compose-mode . ("yaml-language-server" "--stdio"))))
+  (add-hook 'docker-compose-mode-local-vars-hook #'lsp! 'append))
+
+;; Kubernetes — magit-style cluster overview (SPC o k k). Refresh is on demand
+;; rather than on a timer so it doesn't hammer the cluster in the background.
+(use-package! kubernetes
+  :commands (kubernetes-overview)
+  :init
+  (map! :leader
+        (:prefix ("o" . "open")
+         (:prefix ("k" . "kubernetes")
+          :desc "Overview" "k" #'kubernetes-overview)))
+  :config
+  (setq kubernetes-poll-frequency 3600
+        kubernetes-redraw-frequency 3600))
+
+(use-package! kubernetes-evil :after kubernetes)
 
 ;; Load dape on the first opened file. `dape-breakpoint-global-mode' is the
 ;; one autoloaded entry point that pulls in the whole dape feature, so this
@@ -221,7 +269,28 @@
                  :type "go"
                  :mode "test"
                  :cwd "."
-                 :program ".")))
+                 :program "."))
+
+  ;; Debug only the single test function under point (delve via DAP). Same as
+  ;; `go-debug-test' but passes `-test.run ^TestName$' so just that test runs.
+  ;; Reachable from the `SPC d d' config picker, like the other go-debug-* configs.
+  (add-to-list 'dape-configs
+               '(go-debug-test-at-point
+                 modes (go-mode go-ts-mode)
+                 ensure dape-ensure-command
+                 command "dlv"
+                 command-args ("dap" "--listen" "127.0.0.1::autoport")
+                 command-cwd dape-command-cwd
+                 port :autoport
+                 :request "launch"
+                 :type "go"
+                 :mode "test"
+                 :cwd "."
+                 :program "."
+                 :args (lambda ()
+                         (if-let ((name (+go/test-name-at-point)))
+                             (vector "-test.run" (format "^%s$" name))
+                           (user-error "No Go test function at point"))))))
 
 ;; Go test runner (go.work workspace aware)
 (defun +go/module-root ()
@@ -237,6 +306,10 @@
                      (concat "./" (file-relative-name
                                    (file-name-directory (buffer-file-name))
                                    mod-root))))))
+
+(defun +go/test-name-at-point ()
+  "Name of the Go test function surrounding point, or nil."
+  (which-function))
 
 (defun +go/test-current-function ()
   "Run test function at point."
@@ -300,7 +373,12 @@
         (:prefix ("s" . "struct tags")
          :desc "Add tag"        "a" #'go-tag-add
          :desc "Remove tag"     "r" #'go-tag-remove
-         :desc "Clear tags"     "c" #'go-tag-clear)))
+         :desc "Clear tags"     "c" #'go-tag-clear)
+        ;; Code generation. `go-impl' needs the `impl' binary and
+        ;; `go-fill-struct' needs `fillstruct' on PATH (see install notes below).
+        (:prefix ("i" . "implement/fill")
+         :desc "Impl interface" "i" #'go-impl
+         :desc "Fill struct"    "f" #'go-fill-struct)))
 
 
 ;; vterm
@@ -317,16 +395,9 @@
         corfu-quit-no-match 'separator
         corfu-preview-current 'insert
         corfu-popupinfo-delay '(0.3 . 0.2))
-  (corfu-popupinfo-mode 1)
-  (with-eval-after-load 'kind-icon
-    (setq kind-icon-default-face 'corfu-default)
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)))
-
-(use-package! kind-icon
-  :after corfu
-  :config
-  (setq kind-icon-use-icons t
-        kind-icon-blend-background nil))
+  (corfu-popupinfo-mode 1))
+;; Completion icons are provided by the corfu `+icons' module flag
+;; (nerd-icons-corfu), so no manual kind-icon setup is needed here.
 
 ;; Cape: extra completion sources
 (after! cape
@@ -345,10 +416,6 @@
         projectile-auto-discover t
         projectile-enable-caching t
         projectile-sort-order 'recently-active))
-
-;; golangci-lint as secondary flycheck checker (eglot/flymake is primary)
-(use-package! flycheck-golangci-lint
-  :hook (go-mode . flycheck-golangci-lint-setup))
 
 ;; Prettier Go test output via gotest
 (use-package! gotest

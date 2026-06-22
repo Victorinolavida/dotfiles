@@ -47,9 +47,6 @@
 ;; Prettier Go test output
 (package! gotest)
 
-;; Icons in completion popup
-(package! kind-icon)
-
 ;; Floating hover doc frame (replaces lsp-ui-doc-glance)
 (package! eldoc-box)
 
@@ -68,11 +65,13 @@
 (package! pg)
 (package! pgmacs :recipe (:host github :repo "emarsden/pgmacs"))
 
-;; Go struct tag management (add/remove/rename json/db/etc tags)
-(package! go-tag)
+;; go-tag (struct tags) and flycheck-golangci-lint are already bundled by
+;; Doom's `:lang go' module, so they're not re-declared here.
 
-;; golangci-lint flycheck integration
-(package! flycheck-golangci-lint)
+;; Generate interface method stubs (needs the `impl' binary) and fill struct
+;; literals with zero-value fields (needs the `fillstruct' binary).
+(package! go-impl)
+(package! go-fill-struct)
 
 ;; Keep cursor vertically centered
 (package! centered-cursor-mode)
@@ -91,3 +90,10 @@
 
 (package! gotest-ui
   :recipe (:host github :repo "antifuchs/gotest-ui-mode"))
+
+;; Kubernetes — magit-style cluster management UI (pods/deployments/services…)
+(package! kubernetes)
+(package! kubernetes-evil)   ; evil keybindings for the kubernetes overview
+
+;; docker-compose-mode — keyword/indentation support for compose files
+(package! docker-compose-mode)
