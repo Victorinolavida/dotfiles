@@ -5,14 +5,16 @@ Personal dotfiles for macOS and Linux. Managed with [chezmoi](https://chezmoi.io
 ## Quick Install
 
 ```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply Victorinolavida
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply --source ~/.config/dotfiles Victorinolavida
 ```
 
 Or if chezmoi is already installed:
 
 ```bash
-chezmoi init --apply Victorinolavida
+chezmoi init --apply --source ~/.config/dotfiles Victorinolavida
 ```
+
+> **Note:** `--source ~/.config/dotfiles` is required. This repo sets `sourceDir = ~/.config/dotfiles` in `.chezmoi.toml.tmpl`, so chezmoi must clone there too. Without `--source`, chezmoi clones to its default (`~/.local/share/chezmoi`), which won't match `sourceDir` — and your dotfiles will look unmanaged.
 
 ---
 
