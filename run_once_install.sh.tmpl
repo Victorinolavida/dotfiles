@@ -44,7 +44,7 @@ fi
 {{ else if eq .chezmoi.os "linux" -}}
 # ── Linux ─────────────────────────────────────────────────────────────────────
 sudo apt-get update -qq
-sudo apt-get install -y git curl zsh tmux ripgrep build-essential
+sudo apt-get install -y git curl zsh tmux ripgrep build-essential xclip
 
 # eza
 if ! has eza; then
