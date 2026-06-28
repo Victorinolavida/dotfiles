@@ -30,7 +30,6 @@
 | Key | Action |
 |-----|--------|
 | `Alt + g` | Scratch session (toggle floating terminal) |
-| `Alt + r` | Ranger file manager (90% screen) |
 | `Alt + t` | Shell popup (75% screen) |
 
 ---

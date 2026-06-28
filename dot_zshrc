@@ -23,20 +23,14 @@ export LC_ALL="en_US.UTF-8"
 # PATH
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.emacs.d/bin:$PATH"
 
 # Go
 export GOPATH=$HOME/go
 export PATH=$PATH:$HOME/go/bin
 
-# fnm (cross-platform)
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  FNM_PATH="$HOME/Library/Application Support/fnm"
-else
-  FNM_PATH="$HOME/.local/share/fnm"
-fi
-if [ -d "$FNM_PATH" ]; then
-  export PATH="$FNM_PATH:$PATH"
+# fnm — on Linux the curl installer puts the binary in ~/.local/share/fnm
+if [[ "$OSTYPE" != "darwin"* ]] && [[ -d "$HOME/.local/share/fnm" ]]; then
+  export PATH="$HOME/.local/share/fnm:$PATH"
 fi
 if command -v fnm &>/dev/null; then
   eval "$(fnm env --use-on-cd --shell zsh)"
@@ -96,8 +90,8 @@ fi
 # p10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Yazi - change directory on exit
-function ya() {
+# Yazi - change directory on exit (named ycd to avoid shadowing yazi's `ya` CLI)
+function ycd() {
   local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
   yazi "$@" --cwd-file="$tmp"
   if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
@@ -106,9 +100,4 @@ function ya() {
   rm -f -- "$tmp"
 }
 eval "$(direnv hook zsh)"
-
-# fnm
-FNM_PATH="/opt/homebrew/opt/fnm/bin"
-if [ -d "$FNM_PATH" ]; then
-  eval "$(fnm env --shell zsh)"
-fi
+eval "$(zoxide init zsh)"
