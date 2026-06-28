@@ -1,0 +1,42 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.iml
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnp.*
+.yarn/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Go
+vendor/
+
+# Rust
+/target/
+
+# Logs / temp
+*.log
+*.tmp
