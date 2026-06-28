@@ -29,14 +29,9 @@ export PATH="$HOME/.emacs.d/bin:$PATH"
 export GOPATH=$HOME/go
 export PATH=$PATH:$HOME/go/bin
 
-# fnm (cross-platform)
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  FNM_PATH="$HOME/Library/Application Support/fnm"
-else
-  FNM_PATH="$HOME/.local/share/fnm"
-fi
-if [ -d "$FNM_PATH" ]; then
-  export PATH="$FNM_PATH:$PATH"
+# fnm — on Linux the curl installer puts the binary in ~/.local/share/fnm
+if [[ "$OSTYPE" != "darwin"* ]] && [[ -d "$HOME/.local/share/fnm" ]]; then
+  export PATH="$HOME/.local/share/fnm:$PATH"
 fi
 if command -v fnm &>/dev/null; then
   eval "$(fnm env --use-on-cd --shell zsh)"
@@ -106,9 +101,3 @@ function ya() {
   rm -f -- "$tmp"
 }
 eval "$(direnv hook zsh)"
-
-# fnm
-FNM_PATH="/opt/homebrew/opt/fnm/bin"
-if [ -d "$FNM_PATH" ]; then
-  eval "$(fnm env --shell zsh)"
-fi
