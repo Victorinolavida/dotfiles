@@ -32,8 +32,7 @@ This script runs automatically when you first apply the dotfiles (or whenever it
 
 **macOS** (via Homebrew)
 - CLI tools: `git`, `curl`, `zsh`, `eza`, `bat`, `fzf`, `fd`, `zoxide`, `lazygit`, `tmux`, `ripgrep`, `go`, `neovim`, `yazi`
-- Casks: `ghostty`, `font-jetbrains-mono-nerd-font`, `font-intone-mono-nerd-font`
-- Emacs: `emacs-mac@29` (railwaycat tap, with xwidgets + native compilation)
+- Casks: `ghostty`, `font-jetbrains-mono-nerd-font`, `font-intone-mono-nerd-font`, `font-symbols-only-nerd-font`
 - Node version manager: `fnm`
 
 **Linux** (via apt + GitHub releases)
@@ -43,14 +42,11 @@ This script runs automatically when you first apply the dotfiles (or whenever it
 - `lazygit`, `yazi` — downloaded from GitHub releases
 - `neovim` via snap
 - `ghostty` — prints a manual-install reminder (no official Linux package)
-- Emacs: snap (preferred) or kelleyk PPA
-- `fnm`, Rust/Cargo, JetBrainsMono Nerd Font
+- `fnm`, Rust/Cargo, JetBrainsMono + IntelliOneMono + Symbols Nerd Fonts
 
 **Both platforms**
 - Oh My Zsh
 - Tmux Plugin Manager (TPM) → `~/.tmux/plugins/tpm`
-- Doom Emacs → `~/.emacs.d`
-- `dlv` (Go debugger, via `go install`)
 
 ### When it runs
 
@@ -86,7 +82,6 @@ dotfiles/
 ├── dot_aerospace.toml     → ~/.aerospace.toml
 ├── dot_wezterm.lua        → ~/.wezterm.lua
 ├── dot_config/
-│   ├── doom/              → ~/.config/doom/
 │   ├── ghostty/           → ~/.config/ghostty/
 │   ├── git/ignore         → ~/.config/git/ignore  (global gitignore)
 │   ├── kitty/             → ~/.config/kitty/
@@ -118,11 +113,6 @@ Requires TPM. Installed by `run_once_install.sh.tmpl`. After first apply, open t
 
 ### Neovim
 Config sourced from [minimal_nvim](https://github.com/Victorinolavida/minimal_nvim) via `.chezmoiexternal.toml`. chezmoi clones it automatically to `~/.config/nvim`.
-
-### Doom Emacs
-Config at `~/.config/doom/` (managed by chezmoi). Doom itself cloned to `~/.emacs.d` by `run_once_install.sh.tmpl`.
-
-Add `~/.emacs.d/bin` to `PATH` if not already present (`.zshrc` handles this).
 
 ### Yazi
 Modern terminal file manager. Use `ycd` instead of `yazi` to `cd` into the last visited directory on exit. (`ya` is reserved for yazi's own CLI tool.)
