@@ -37,7 +37,7 @@ This script runs automatically when you first apply the dotfiles (or whenever it
 - Node version manager: `fnm`
 
 **Linux** (via apt + GitHub releases)
-- apt: `git`, `curl`, `zsh`, `tmux`, `ripgrep`, `build-essential`, `fzf`, `fd-find`, `zoxide`, `golang-go`
+- apt: `git`, `curl`, `zsh`, `tmux`, `ripgrep`, `build-essential`, `xclip`, `fzf`, `fd-find`, `zoxide`, `golang-go`
 - `eza` via the official gierens apt repo
 - `bat` (with a `bat` → `batcat` symlink on Ubuntu)
 - `lazygit`, `yazi` — downloaded from GitHub releases
@@ -88,6 +88,7 @@ dotfiles/
 ├── dot_config/
 │   ├── doom/              → ~/.config/doom/
 │   ├── ghostty/           → ~/.config/ghostty/
+│   ├── git/ignore         → ~/.config/git/ignore  (global gitignore)
 │   ├── kitty/             → ~/.config/kitty/
 │   └── yazi/              → ~/.config/yazi/
 ├── dot_local/bin/         → ~/.local/bin/  (tmux scripts)
@@ -124,7 +125,7 @@ Config at `~/.config/doom/` (managed by chezmoi). Doom itself cloned to `~/.emac
 Add `~/.emacs.d/bin` to `PATH` if not already present (`.zshrc` handles this).
 
 ### Yazi
-Modern terminal file manager. Use `ya` instead of `yazi` to `cd` into the last visited directory on exit.
+Modern terminal file manager. Use `ycd` instead of `yazi` to `cd` into the last visited directory on exit. (`ya` is reserved for yazi's own CLI tool.)
 
 ---
 
