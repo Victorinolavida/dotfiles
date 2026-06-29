@@ -56,6 +56,14 @@
 ;; clobbered by gcmh. Tune `gcmh-high-cons-threshold' instead if needed.)
 (setq read-process-output-max (* 1024 1024))
 
+;; GUI Emacs.app inherits launchd's low file-descriptor limit
+;; (`launchctl limit maxfiles' => 256), and emacs-mac's only file-notify backend
+;; is kqueue (one FD per watched file). Poll for external buffer changes instead
+;; of opening a watcher per visited file, so auto-revert doesn't compete with
+;; eglot/treemacs for that tiny FD budget ("File watching not possible, no file
+;; descriptor left"). See the eglot file-watch fix below for the main offender.
+(setq auto-revert-use-notify nil)
+
 ;; Make CLI tools installed outside the GUI's PATH discoverable (dlv, gopls,
 ;; gofumpt, golangci-lint, emacs-lsp-booster, …). GUI Emacs on macOS doesn't
 ;; inherit the login shell's PATH; exec-path-from-shell imports it (PATH, GOBIN,
@@ -110,6 +118,22 @@
              :schemaStore  (:enable t))))
 
   (add-hook 'eglot-managed-mode-hook #'eglot-inlay-hints-mode)
+
+  ;; Don't advertise dynamic file-watch registration to language servers. gopls
+  ;; would otherwise ask Emacs to watch the entire module tree (up to
+  ;; `eglot-max-file-watches' = 10000), which instantly exhausts GUI Emacs's
+  ;; ~256 kqueue file descriptors on macOS and throws "File watching not
+  ;; possible, no file descriptor left". With this off, gopls falls back to
+  ;; watching the workspace itself — no Emacs FDs consumed.
+  ;; Trade-off: changes made entirely *outside* Emacs (e.g. `git pull`, codegen)
+  ;; may not refresh the server until you touch a file in that package or run
+  ;; `M-x eglot-reconnect'. In-editor edits are unaffected.
+  (cl-defmethod eglot-client-capabilities :around (server)
+    (let* ((caps (cl-call-next-method))
+           (ws (plist-get caps :workspace)))
+      (when ws
+        (plist-put ws :didChangeWatchedFiles '(:dynamicRegistration :json-false)))
+      caps))
 
   ;; Go: organize imports (add/remove) on save via gopls code action — apheleia
   ;; only formats, it doesn't touch imports. No-op when eglot isn't managing.
@@ -375,6 +399,21 @@
          :desc "Impl interface" "i" #'go-impl
          :desc "Fill struct"    "f" #'go-fill-struct)))
 
+
+;; direnv — per-project environment (Go toolchain, PATH, secrets) loaded from
+;; .envrc. The `:tools direnv' module already turns on `envrc-global-mode', so
+;; every buffer (and the eglot/gopls process started in it) inherits the
+;; project's direnv environment. This block just adds keybindings and makes the
+;; env reload quietly. Needs the `direnv' binary on PATH (installed by
+;; run_once_install.sh) — run `direnv allow' once per project, or `SPC e a'.
+(after! envrc
+  (setq envrc-none-lighter nil)         ; no modeline clutter when no .envrc
+  (map! :leader
+        (:prefix ("e" . "env/direnv")
+         :desc "Allow .envrc"   "a" #'envrc-allow
+         :desc "Deny .envrc"    "d" #'envrc-deny
+         :desc "Reload"         "r" #'envrc-reload
+         :desc "Reload all"     "R" #'envrc-reload-all)))
 
 ;; vterm
 (after! vterm
