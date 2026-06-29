@@ -97,3 +97,53 @@
 
 ;; docker-compose-mode — keyword/indentation support for compose files
 (package! docker-compose-mode)
+
+;; ── Developer-experience additions ──────────────────────────────────────────
+
+;; eglot-x — LSP protocol extensions eglot deliberately omits (extra code
+;; actions, server status, structural search/replace…)
+(package! eglot-x
+  :recipe (:host github :repo "nemethf/eglot-x"))
+
+;; breadcrumb — header-line project + symbol location (by eglot's author)
+(package! breadcrumb)
+
+;; exec-path-from-shell — import login-shell PATH/env into GUI Emacs
+(package! exec-path-from-shell)
+
+;; justl — transient UI for `just' recipes (needs the `just' binary)
+(package! justl)
+
+;; magit-todos — list TODO/FIXME/HACK as a section in the magit status buffer
+(package! magit-todos)
+
+;; consult-gh — GitHub CLI browser via consult/vertico (needs authed `gh')
+(package! consult-gh
+  :recipe (:host github :repo "armindarvish/consult-gh"))
+
+;; gptel — buffer-agnostic LLM client (needs an API key, no local binary)
+(package! gptel)
+
+;; combobulate — tree-sitter structural navigation/editing
+(package! combobulate
+  :recipe (:host github :repo "mickeynp/combobulate"))
+
+;; devdocs — offline DevDocs viewer (Go/Docker/Terraform/Postgres…)
+(package! devdocs)
+
+;; indent-bars — fast, tree-sitter-aware indentation guides (great for YAML)
+(package! indent-bars
+  :recipe (:host github :repo "jdtsmith/indent-bars"))
+
+;; blamer — idle inline git blame (GitLens-style)
+(package! blamer
+  :recipe (:host github :repo "Artawower/blamer.el"))
+
+;; dirvish — modern dired overhaul with previews and a sidebar
+(package! dirvish)
+
+;; org-modern — clean visual styling for org buffers
+(package! org-modern)
+
+;; protobuf-ts-mode — tree-sitter major mode for proto3 (.proto) files
+(package! protobuf-ts-mode)

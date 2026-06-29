@@ -1,6 +1,6 @@
 # Doom Emacs Config
 
-Multi-language development environment (Go primary) with eglot LSP, debugger, formatters, org-roam, browser, HTTP client, and PostgreSQL browser.
+Go-focused development environment with eglot LSP, debugger, formatters, org-roam, browser, HTTP client, and PostgreSQL browser.
 
 ## Requirements
 
@@ -8,7 +8,7 @@ Multi-language development environment (Go primary) with eglot LSP, debugger, fo
 
 ```bash
 brew tap railwaycat/emacsmacport
-brew install emacs-mac@29 --with-xwidgets
+brew install emacs-mac@29 --with-xwidgets --with-native-compilation
 # cp not symlink — Spotlight does not index symlinks
 cp -r /opt/homebrew/opt/emacs-mac@29/Emacs.app /Applications/Emacs.app
 ```
@@ -18,7 +18,7 @@ cp -r /opt/homebrew/opt/emacs-mac@29/Emacs.app /Applications/Emacs.app
 After cloning or modifying `init.el` / `packages.el`:
 
 ```bash
-~/.config/emacs/bin/doom sync
+~/.emacs.d/bin/doom sync
 ```
 
 Then restart Emacs.
@@ -38,25 +38,6 @@ go install golang.org/x/tools/cmd/goimports@latest    # import manager
 go install github.com/x-motemen/gore/cmd/gore@latest  # REPL
 go install golang.org/x/tools/cmd/godoc@latest        # documentation
 brew install golangci-lint                             # linter suite
-```
-
-### JavaScript
-
-```bash
-npm install -g typescript-language-server typescript
-```
-
-### Python
-
-```bash
-pip install pyright
-```
-
-### Rust
-
-```bash
-rustup component add rust-analyzer
-rustup component add clippy        # rust-analyzer runs clippy for diagnostics
 ```
 
 ### YAML / docker-compose / Kubernetes manifests
@@ -91,10 +72,8 @@ npm install -g dockerfile-language-server-nodejs   # docker-langserver
 | Module                  | Purpose                          |
 | ----------------------- | -------------------------------- |
 | `(lsp +eglot)`          | Eglot LSP client (fast, built-in)|
-| `(go +lsp)`             | Go + gopls                       |
-| `(javascript +lsp)`     | JS/TS + typescript-language-server |
-| `(python +lsp +pyright)`| Python + pyright                 |
-| `(rust +lsp)`           | Rust + rust-analyzer             |
+| `(go +lsp +tree-sitter)`| Go + gopls (go-ts-mode)          |
+| `(sh +lsp)`             | Shell + bash-language-server     |
 | `(yaml +lsp)`           | YAML + yaml-language-server      |
 | `(docker +lsp)`         | Dockerfile + docker-langserver   |
 | `kubernetes`            | Cluster overview UI (`SPC o k k`)|
@@ -160,6 +139,7 @@ npm install -g dockerfile-language-server-nodejs   # docker-langserver
 | `SPC m T a` | Test project         |
 | `SPC m T b` | Benchmark            |
 | `SPC m T c` | Coverage             |
+| `SPC m T u` | Streaming UI (gotest-ui, runs in vterm) |
 
 ### Go — Struct tags (`SPC m s`)
 
@@ -168,20 +148,6 @@ npm install -g dockerfile-language-server-nodejs   # docker-langserver
 | `SPC m s a` | Add struct tag    |
 | `SPC m s r` | Remove struct tag |
 | `SPC m s c` | Clear all tags    |
-
-### Rust — Cargo (`SPC m b` / `SPC m t`)
-
-Provided by the `rust` module (rustic):
-
-| Key         | Action         |
-| ----------- | -------------- |
-| `SPC m b b` | cargo build    |
-| `SPC m b c` | cargo check    |
-| `SPC m b C` | cargo clippy   |
-| `SPC m b r` | cargo run      |
-| `SPC m b f` | cargo fmt      |
-| `SPC m t a` | cargo test all |
-| `SPC m t t` | test at point  |
 
 ### Kubernetes (`SPC o k`)
 
@@ -252,8 +218,32 @@ On save via apheleia (async — no blocking `:w`):
 | Language   | Formatter             |
 | ---------- | --------------------- |
 | Go         | `gofumpt`             |
-| JS/TS      | `prettier` (if found) |
-| Python     | `black` (if found)    |
-| Rust       | `rustfmt`             |
+| Shell      | `shfmt` (if found)    |
 
 Manual format: `SPC c f`
+
+---
+
+## Developer-experience extras
+
+Extra packages declared in `packages.el` / wired in `config.el`:
+
+| Package                | What it adds                              | Extra dependency        |
+| ---------------------- | ----------------------------------------- | ----------------------- |
+| `eglot-x`              | Extra eglot LSP protocol extensions       | —                       |
+| `breadcrumb`           | Header-line project + symbol location     | —                       |
+| `exec-path-from-shell` | Imports login-shell PATH/env into GUI     | — (replaces manual PATH)|
+| `magit-todos`          | TODO/FIXME section in magit status        | `rg` (ships with Doom)  |
+| `justl` (`SPC o j`)    | Transient UI for `just` recipes           | `just` binary           |
+| `consult-gh`           | GitHub browser via consult/vertico        | authed `gh` CLI         |
+| `gptel`                | In-editor LLM client                      | provider API key        |
+| `combobulate`          | Tree-sitter structural navigation/editing | ts grammars (already)   |
+| `devdocs` (`SPC o d`)  | Offline DevDocs viewer                    | `M-x devdocs-install`   |
+| `indent-bars`          | Tree-sitter indent guides (YAML/k8s)      | —                       |
+| `blamer` (`SPC g B`)   | Inline git blame (GitLens-style)          | `git`                   |
+| `dirvish`              | Modern dired with previews/sidebar        | `eza`/`poppler` (opt.)  |
+| `org-modern`           | Clean org buffer styling                  | —                       |
+| `protobuf-ts-mode`     | Tree-sitter mode for `.proto` files       | protobuf ts grammar     |
+
+> `eglot-x` exposes generic eglot extensions; its rust-analyzer-specific
+> features are inactive here since this is a Go-only setup.

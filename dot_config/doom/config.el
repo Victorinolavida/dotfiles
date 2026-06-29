@@ -50,20 +50,23 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
-;; GC tuning — LSP servers produce large output; default limits cause stutters
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024))
+;; LSP servers stream large payloads; bump the per-read limit so eglot doesn't
+;; stall on big responses. (GC is left to Doom's gcmh, which manages
+;; `gc-cons-threshold' dynamically — a static `setq' here would just be
+;; clobbered by gcmh. Tune `gcmh-high-cons-threshold' instead if needed.)
+(setq read-process-output-max (* 1024 1024))
 
 ;; Make CLI tools installed outside the GUI's PATH discoverable (dlv, gopls,
 ;; gofumpt, golangci-lint, emacs-lsp-booster, …). GUI Emacs on macOS doesn't
-;; inherit the shell PATH, so add Go's bin dir and Homebrew/Cargo bins.
-(dolist (dir (list (or (getenv "GOBIN")
-                       (expand-file-name "bin" (or (getenv "GOPATH") "~/go")))
-                   "/opt/homebrew/bin"
-                   (expand-file-name "~/.cargo/bin")))
-  (when (file-directory-p dir)
-    (add-to-list 'exec-path dir)
-    (setenv "PATH" (concat dir path-separator (getenv "PATH")))))
+;; inherit the login shell's PATH; exec-path-from-shell imports it (PATH, GOBIN,
+;; GOPATH, cargo/homebrew bins) — the canonical, maintained replacement for a
+;; hand-rolled exec-path list.
+(use-package! exec-path-from-shell
+  :when (memq window-system '(mac ns x))
+  :config
+  (dolist (var '("GOPATH" "GOBIN"))
+    (add-to-list 'exec-path-from-shell-variables var))
+  (exec-path-from-shell-initialize))
 
 ;; Eglot: lighter LSP client, ~30% faster startup vs lsp-mode
 (after! eglot
@@ -95,17 +98,6 @@
                       :functionTypeParameters t
                       :parameterNames         t
                       :rangeVariableTypes     t))
-      ;; rust-analyzer: clippy for diagnostics, all features, proc-macro
-      ;; expansion, and a rich set of inlay hints (rendered by
-      ;; eglot-inlay-hints-mode, enabled in the managed-mode-hook above).
-      :rust-analyzer (:check (:command "clippy")
-                      :cargo (:buildScripts (:enable t)
-                              :features "all")
-                      :procMacro (:enable t)
-                      :inlayHints (:bindingModeHints      (:enable t)
-                                   :closureReturnTypeHints (:enable "always")
-                                   :lifetimeElisionHints   (:enable "always"
-                                                            :useParameterNames t)))
       ;; yaml-language-server: validation, hover, completion, and automatic
       ;; schema association from SchemaStore (GitHub Actions, docker-compose,
       ;; etc.). For Kubernetes manifests add a modeline at the top of the file:
@@ -360,9 +352,12 @@
        :desc "Stack up"             "k" #'dape-stack-select-up
        :desc "Stack down"           "j" #'dape-stack-select-down))
 
-(after! go-mode
+;; `+tree-sitter' remaps Go buffers to `go-ts-mode' (derives from prog-mode, so
+;; it does NOT inherit `go-mode-map'). Bind both maps so the localleader keys
+;; work regardless of which major mode is active.
+(after! (:or go-mode go-ts-mode)
   (map! :localleader
-        :map go-mode-map
+        :map (go-mode-map go-ts-mode-map)
         (:prefix ("r" . "run")
          :desc "Run file"       "r" #'+go/run)
         (:prefix ("t" . "test")
@@ -407,8 +402,11 @@
 
 ;; Format on save via apheleia (async subprocess — no LSP round-trip, no blocking :w)
 (after! apheleia
-  (setf (alist-get 'go-mode apheleia-mode-alist) 'gofumpt)
-  (setf (alist-get 'gofumpt apheleia-formatters) '("gofumpt")))
+  (setf (alist-get 'gofumpt apheleia-formatters) '("gofumpt"))
+  ;; With `+tree-sitter' Go buffers run in `go-ts-mode', which has its own
+  ;; apheleia-mode-alist entry (defaulting to gofmt) — remap both modes.
+  (dolist (mode '(go-mode go-ts-mode))
+    (setf (alist-get mode apheleia-mode-alist) 'gofumpt)))
 
 ;; Projectile: auto-discover projects (like nvim-project depth=2 under ~/Documents)
 (after! projectile
@@ -419,17 +417,17 @@
 
 ;; Prettier Go test output via gotest
 (use-package! gotest
-  :after go-mode
+  :after (:or go-mode go-ts-mode)
   :init
-  (after! go-mode
-    (map! :localleader
-          :map go-mode-map
-          (:prefix ("T" . "gotest pretty")
-           :desc "Test at point"  "t" #'go-test-current-test
-           :desc "Test file"      "f" #'go-test-current-file
-           :desc "Test project"   "a" #'go-test-current-project
-           :desc "Benchmark"      "b" #'go-test-current-benchmark
-           :desc "Coverage"       "c" #'go-test-current-coverage))))
+  (map! :localleader
+        :map (go-mode-map go-ts-mode-map)
+        (:prefix ("T" . "gotest pretty")
+         :desc "Test at point"  "t" #'go-test-current-test
+         :desc "Test file"      "f" #'go-test-current-file
+         :desc "Test project"   "a" #'go-test-current-project
+         :desc "Benchmark"      "b" #'go-test-current-benchmark
+         :desc "Coverage"       "c" #'go-test-current-coverage
+         :desc "Streaming UI"   "u" #'+go/run-gotest-ui)))
 
 ;; org-roam (Obsidian alternative — zettelkasten + backlinks)
 (after! org-roam
@@ -445,8 +443,13 @@
          :desc "Toggle buffer" "b" #'org-roam-buffer-toggle
          :desc "Graph"         "g" #'org-roam-graph)))
 
-;; xwidget-webkit as default browser (real WebKit engine)
-(setq browse-url-browser-function #'xwidget-webkit-browse-url)
+;; xwidget-webkit as default browser (real WebKit engine). Only when this Emacs
+;; was built with xwidgets — the Linux snap/PPA fallback may lack it, and
+;; calling `xwidget-webkit-browse-url' there errors.
+;; Requires Emacs 25+ built `--with-xwidgets' (GTK3 + WebKitGTK on Linux;
+;; emacs-plus/emacs-mac `--with-xwidgets' on macOS). Verified on Emacs 29.4.
+(when (featurep 'xwidget-internal)
+  (setq browse-url-browser-function #'xwidget-webkit-browse-url))
 (map! :leader
       (:prefix ("o w" . "browser")
        :desc "Browse URL"          "w" #'xwidget-webkit-browse-url
@@ -496,19 +499,13 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;; (after! go-mode
-;;   (add-hook 'go-mode-hook #'gotest-ui-mode))
-
-;; ~/.doom.d/config.el
-(after! gotest-ui
-  (add-hook 'go-mode-hook #'gotest-ui-mode)
-
-  ;; Optional keybindings
-  (map! :after gotest-ui-mode
-        :map gotest-ui-mode-map
-        :localleader
-        :desc "Run Go tests" "t" #'gotest-ui-run
-        :desc "Toggle Go test UI" "u" #'gotest-ui-mode))
+;; gotest-ui — live, streaming test results.
+;; NOTE `gotest-ui-mode' is the MAJOR mode of the *gotest-ui* results buffer,
+;; NOT a minor mode — it must never go on `go-mode-hook' (that would switch the
+;; source buffer's major mode and clobber editing). The streaming runner is
+;; bound as `SPC m T u' alongside the other gotest commands (see the gotest
+;; use-package above); `+go/run-gotest-ui' shells out via vterm, so it needs no
+;; eager load of the gotest-ui feature.
 
 ;; go install golang.org/x/tools/gopls@latest
 ;; go install github.com/fatih/gomodifytags@latest
@@ -517,18 +514,21 @@
 ;; go install github.com/rakyll/gotest@latest
 ;; go install github.com/onsi/ginkgo/ginkgo@latest  # if using Ginkgo
 
-;; keep the cursor centered to avoid sudden scroll jumps
-(require 'centered-cursor-mode)
-
-;; disable in terminal modes
+;; keep the cursor vertically centered to avoid sudden scroll jumps.
+;; Deferred to the first real buffer (via use-package!/:hook) so it doesn't load
+;; centered-cursor-mode during startup.
+;; Disabled in terminal/Info/comint modes where recentering misbehaves
+;; (e.g. it breaks going back with backspace in Info). See
 ;; http://stackoverflow.com/a/6849467/519736
-;; also disable in Info mode, because it breaks going back with the backspace key
-(define-global-minor-mode my-global-centered-cursor-mode centered-cursor-mode
-  (lambda ()
-    (when (not (memq major-mode
-                     (list 'Info-mode 'term-mode 'eshell-mode 'shell-mode 'erc-mode)))
-      (centered-cursor-mode))))
-(my-global-centered-cursor-mode 1)
+(use-package! centered-cursor-mode
+  :defer t
+  :init
+  (define-global-minor-mode my-global-centered-cursor-mode centered-cursor-mode
+    (lambda ()
+      (unless (memq major-mode
+                    '(Info-mode term-mode eshell-mode shell-mode erc-mode vterm-mode))
+        (centered-cursor-mode))))
+  (add-hook 'doom-first-buffer-hook #'my-global-centered-cursor-mode))
 
 (defun +go/run-gotest-ui ()
   "Run gotest-ui in vterm so it doesn't break syntax highlighting."
@@ -536,3 +536,78 @@
   (let ((default-directory (projectile-project-root)))
     (vterm)
     (vterm-send-string "gotest-ui ./...\n")))
+
+;; ─────────────────────────────────────────────────────────────────────────────
+;; Extra developer-experience packages (declared in packages.el)
+;; ─────────────────────────────────────────────────────────────────────────────
+
+;; eglot-x — LSP protocol extensions eglot omits (extra code actions, server
+;; status, structural search/replace, etc.). Activated for every eglot session.
+(use-package! eglot-x
+  :after eglot
+  :config (eglot-x-setup))
+
+;; breadcrumb — header-line showing project path + symbol location (imenu).
+(use-package! breadcrumb
+  :hook (doom-first-buffer . breadcrumb-mode))
+
+;; magit-todos — surface TODO/FIXME/HACK comments as a Magit status section
+;; (pairs with the hl-todo module). Uses ripgrep, which ships with Doom.
+(use-package! magit-todos
+  :after magit
+  :config (magit-todos-mode 1))
+
+;; justl — transient UI for `just' recipes (needs the `just' binary on PATH).
+(use-package! justl
+  :commands (justl justl-exec-recipe-in-dir)
+  :init
+  (map! :leader
+        (:prefix ("o" . "open")
+         :desc "just recipes" "j" #'justl)))
+
+;; consult-gh — GitHub CLI browser through consult/vertico (needs authed `gh').
+(use-package! consult-gh
+  :after consult
+  :commands (consult-gh-search-repos consult-gh-default-action))
+
+;; gptel — in-editor LLM client (configure your provider/API key separately).
+(use-package! gptel
+  :commands (gptel gptel-send gptel-menu))
+
+;; combobulate — tree-sitter structural navigation/editing. Hook onto the
+;; ts-modes that are actually in use here.
+(use-package! combobulate
+  :hook ((go-ts-mode yaml-ts-mode markdown-mode) . combobulate-mode))
+
+;; devdocs — offline DevDocs viewer (run `M-x devdocs-install' per docset).
+(use-package! devdocs
+  :commands (devdocs-lookup devdocs-install devdocs-search)
+  :init
+  (map! :leader
+        (:prefix ("o" . "open")
+         :desc "devdocs lookup" "d" #'devdocs-lookup)))
+
+;; indent-bars — tree-sitter-aware indent guides; most useful for YAML/k8s.
+(use-package! indent-bars
+  :hook ((yaml-mode yaml-ts-mode) . indent-bars-mode))
+
+;; blamer — idle inline git blame (GitLens-style), on demand.
+(use-package! blamer
+  :commands (blamer-mode global-blamer-mode)
+  :init
+  (map! :leader
+        (:prefix ("g" . "git")
+         :desc "Toggle inline blame" "B" #'blamer-mode)))
+
+;; dirvish — modern dired overhaul with previews and a sidebar.
+(use-package! dirvish
+  :after dired
+  :config (dirvish-override-dired-mode))
+
+;; org-modern — clean visual styling for org buffers (pairs with org+roam).
+(use-package! org-modern
+  :hook (org-mode . org-modern-mode))
+
+;; protobuf-ts-mode — tree-sitter major mode for proto3 (.proto) files.
+(use-package! protobuf-ts-mode
+  :mode "\\.proto\\'")
