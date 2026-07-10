@@ -23,4 +23,10 @@ git clone --depth 1 https://github.com/doomemacs/core "$EMACS_DIR"
 #            code treats as a (status . output) cons). Drop --no-hooks once fixed upstream.
 "$EMACS_DIR/bin/doom" -! install --no-hooks
 
+# Capture the current shell PATH into Doom's env file. macOS GUI Emacs (launched
+# from Finder/dock) does NOT inherit the shell PATH, so without this it can't find
+# tools like gopls/go — LSP silently fails. Re-run `doom sync --env` if you later
+# install new CLI tools that Emacs needs to see.
+"$EMACS_DIR/bin/doom" -! sync --env
+
 echo "[doom] done. Launch Emacs; leader key is SPC."

@@ -100,14 +100,13 @@
   (add-to-list 'completion-category-overrides '(eglot (styles orderless)))
   (add-to-list 'completion-category-overrides '(eglot-capf (styles orderless)))
 
-  ;; gopls settings that most improve completion & imports:
-  ;;   completeUnimported — complete symbols from not-yet-imported packages
-  ;;                        (and auto-add the import when you accept them)
-  ;;   usePlaceholders    — fill function args as editable tab stops
-  ;;   staticcheck        — richer diagnostics
+  ;; gopls settings:
+  ;;   usePlaceholders — fill function args as editable tab stops
+  ;;   staticcheck     — richer diagnostics
+  ;; (Completing symbols from unimported packages, and auto-adding their import,
+  ;; is always-on in modern gopls — no setting needed.)
   (setq-default eglot-workspace-configuration
                 '(:gopls (:usePlaceholders t
-                          :completeUnimported t
                           :staticcheck t))))
 
 ;; Go: format the buffer and organize imports on every save, via gopls/eglot.
