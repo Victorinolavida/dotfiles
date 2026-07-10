@@ -73,3 +73,12 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
+
+;; Neovim-style half-page scrolling: keep the cursor vertically centered after
+;; C-d / C-u, like remapping them to `<C-d>zz` / `<C-u>zz` in Neovim.
+;; (Doom already binds C-d/C-u to half-page scroll via `evil-want-C-u-scroll'.)
+(defun +center-after-scroll-a (&rest _)
+  "Recenter the window on point; used as :after advice for evil half-page scroll."
+  (recenter))
+(advice-add 'evil-scroll-down :after #'+center-after-scroll-a)
+(advice-add 'evil-scroll-up   :after #'+center-after-scroll-a)
