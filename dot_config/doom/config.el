@@ -82,3 +82,42 @@
   (recenter))
 (advice-add 'evil-scroll-down :after #'+center-after-scroll-a)
 (advice-add 'evil-scroll-up   :after #'+center-after-scroll-a)
+
+
+;;; ---- LSP (eglot): completion & imports -----------------------------------
+
+;; Corfu: pop completions up automatically as you type, with a docs popup
+;; beside the candidate (Doom leaves corfu manual-trigger by default).
+(after! corfu
+  (setq corfu-auto t
+        corfu-auto-delay 0.1
+        corfu-auto-prefix 2)
+  (corfu-popupinfo-mode +1))
+
+(after! eglot
+  ;; Let orderless fuzzy-match inside LSP completions; eglot otherwise
+  ;; restricts matching to a common prefix.
+  (add-to-list 'completion-category-overrides '(eglot (styles orderless)))
+  (add-to-list 'completion-category-overrides '(eglot-capf (styles orderless)))
+
+  ;; gopls settings that most improve completion & imports:
+  ;;   completeUnimported — complete symbols from not-yet-imported packages
+  ;;                        (and auto-add the import when you accept them)
+  ;;   usePlaceholders    — fill function args as editable tab stops
+  ;;   staticcheck        — richer diagnostics
+  (setq-default eglot-workspace-configuration
+                '(:gopls (:usePlaceholders t
+                          :completeUnimported t
+                          :staticcheck t))))
+
+;; Go: format the buffer and organize imports on every save, via gopls/eglot.
+(defun +go-eglot-organize-imports-h ()
+  "Organize Go imports through gopls before saving."
+  (when (eglot-managed-p)
+    (ignore-errors (eglot-code-action-organize-imports (point-min) (point-max)))))
+
+(add-hook! 'eglot-managed-mode-hook
+  (defun +go-eglot-on-save-setup-h ()
+    (when (derived-mode-p 'go-mode 'go-ts-mode)
+      (add-hook 'before-save-hook #'eglot-format-buffer -10 t)
+      (add-hook 'before-save-hook #'+go-eglot-organize-imports-h nil t))))
