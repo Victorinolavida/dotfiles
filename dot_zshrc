@@ -24,6 +24,9 @@ export LC_ALL="en_US.UTF-8"
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 
+# Doom Emacs CLI (doom sync/install/doctor/upgrade)
+export PATH="$HOME/.config/emacs/bin:$PATH"
+
 # Go
 export GOPATH=$HOME/go
 export PATH=$PATH:$HOME/go/bin
