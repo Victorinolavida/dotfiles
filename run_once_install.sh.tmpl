@@ -19,7 +19,8 @@ brew install \
   neovim \
   yazi \
   direnv \
-  fnm
+  fnm \
+  railwaycat/emacsmacport/emacs-mac@29
 
 brew install --cask \
   nikitabobko/tap/aerospace \
@@ -31,6 +32,11 @@ brew install --cask \
 # Ghostty: open new windows as separate native windows, not macOS tabs,
 # so AeroSpace can tile each one (default tabbing mode merges them into tabs)
 defaults write com.mitchellh.ghostty AppleWindowTabbingMode -string manual
+
+# emacs-mac ships Emacs.app inside the Cellar but doesn't place it in /Applications; copy it there.
+if [ ! -d "/Applications/Emacs.app" ]; then
+  cp -R "$(brew --prefix emacs-mac@29)/Emacs.app" /Applications/
+fi
 
 {{ else if eq .chezmoi.os "linux" -}}
 # ── Linux ─────────────────────────────────────────────────────────────────────
@@ -88,6 +94,12 @@ fi
 # neovim
 if ! has nvim; then
   sudo snap install nvim --classic
+fi
+
+# emacs — recent version via snap (apt ships an older Emacs on some releases,
+# and Doom wants 28.1+). Needed by Doom Emacs (see run_once_setup-doom-emacs.sh).
+if ! has emacs; then
+  sudo snap install emacs --classic
 fi
 
 # Ghostty (no official Linux package yet)
