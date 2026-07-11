@@ -122,3 +122,29 @@
     (when (derived-mode-p 'go-mode 'go-ts-mode)
       (add-hook 'before-save-hook #'eglot-format-buffer -10 t)
       (add-hook 'before-save-hook #'+go-eglot-organize-imports-h nil t))))
+
+
+;;; ---- Debugger (dape) keybindings -----------------------------------------
+;; IDE/VSCode-style function keys for fast stepping during a session, alongside
+;; Doom's built-in `SPC d' debugger menu.
+(defun +dape/start-or-continue ()
+  "Continue the running debug session, or start one if none is active (F5)."
+  (interactive)
+  (condition-case nil
+      (call-interactively #'dape-continue)
+    (error (call-interactively #'dape))))
+
+(when (modulep! :tools debugger)
+  (map! :leader
+        (:prefix ("d" . "debug")
+         :desc "Start / continue"  "SPC" #'+dape/start-or-continue
+         :desc "Start (choose)"    "d"   #'dape
+         :desc "Continue"          "c"   #'dape-continue
+         :desc "Step over (next)"  "n"   #'dape-next
+         :desc "Step into"         "i"   #'dape-step-in
+         :desc "Step out"          "o"   #'dape-step-out
+         :desc "Toggle breakpoint" "b"   #'dape-breakpoint-toggle
+         :desc "Remove all bkpts"  "B"   #'dape-breakpoint-remove-all
+         :desc "REPL"              "r"   #'dape-repl
+         :desc "Info"              "I"   #'dape-info
+         :desc "Quit"              "q"   #'dape-quit)))
