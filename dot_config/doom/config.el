@@ -80,8 +80,17 @@
 ;; C-d / C-u, like remapping them to `<C-d>zz` / `<C-u>zz` in Neovim.
 ;; (Doom already binds C-d/C-u to half-page scroll via `evil-want-C-u-scroll'.)
 (defun +center-after-scroll-a (&rest _)
-  "Recenter the window on point; used as :after advice for evil half-page scroll."
-  (recenter))
+  "Recenter point after an evil half-page scroll.
+Skip it within a half-window of the buffer's top or bottom edge, where
+centering can't add lines above/below point and would instead undo the
+scroll (making C-d/C-u feel stuck). Neovim's `zz' behaves the same at edges."
+  (let ((top-limit (save-excursion
+                     (goto-char (point-min))
+                     (forward-line (/ (window-body-height) 2))
+                     (point))))
+    (unless (or (<= (point) top-limit)
+                (pos-visible-in-window-p (point-max)))
+      (recenter))))
 (advice-add 'evil-scroll-down :after #'+center-after-scroll-a)
 (advice-add 'evil-scroll-up   :after #'+center-after-scroll-a)
 
