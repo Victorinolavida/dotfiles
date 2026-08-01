@@ -1,0 +1,40 @@
+[".oh-my-zsh/custom/themes/powerlevel10k"]
+    type = "git-repo"
+    url = "https://github.com/romkatv/powerlevel10k.git"
+    refreshPeriod = "168h"
+    [".oh-my-zsh/custom/themes/powerlevel10k".clone]
+        args = ["--depth", "1"]
+
+[".oh-my-zsh/custom/plugins/zsh-autosuggestions"]
+    type = "git-repo"
+    url = "https://github.com/zsh-users/zsh-autosuggestions.git"
+    refreshPeriod = "168h"
+    [".oh-my-zsh/custom/plugins/zsh-autosuggestions".clone]
+        args = ["--depth", "1"]
+
+[".oh-my-zsh/custom/plugins/zsh-syntax-highlighting"]
+    type = "git-repo"
+    url = "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+    refreshPeriod = "168h"
+    [".oh-my-zsh/custom/plugins/zsh-syntax-highlighting".clone]
+        args = ["--depth", "1"]
+
+[".oh-my-zsh/custom/plugins/you-should-use"]
+    type = "git-repo"
+    url = "https://github.com/MichaelAquilina/zsh-you-should-use.git"
+    refreshPeriod = "168h"
+    [".oh-my-zsh/custom/plugins/you-should-use".clone]
+        args = ["--depth", "1"]
+
+[".oh-my-zsh/custom/plugins/zsh-bat"]
+    type = "git-repo"
+    url = "https://github.com/fdellwing/zsh-bat.git"
+    refreshPeriod = "168h"
+    [".oh-my-zsh/custom/plugins/zsh-bat".clone]
+        args = ["--depth", "1"]
+
+# Tmux Plugin Manager — dot_tmux.conf runs it from this exact path
+[".tmux/plugins/tpm"]
+    type = "git-repo"
+    url = "https://github.com/tmux-plugins/tpm.git"
+    refreshPeriod = "168h"

@@ -1,0 +1,6 @@
+# Repo meta — not managed as dotfiles
+README.md
+.gitignore
+
+# Symlink dropped in the repo root by accident, not a dotfile
+Emacs.app
