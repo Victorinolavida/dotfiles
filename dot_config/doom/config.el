@@ -36,9 +36,7 @@
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
-;; `relative' shows the current line's absolute number and relative offsets
-;; above/below (nvim-style), which pairs well with evil motions like 5j / 3k.
-(setq display-line-numbers-type 'relative)
+(setq display-line-numbers-type t)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -75,85 +73,3 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
-
-;; Neovim-style half-page scrolling: keep the cursor vertically centered after
-;; C-d / C-u, like remapping them to `<C-d>zz` / `<C-u>zz` in Neovim.
-;; (Doom already binds C-d/C-u to half-page scroll via `evil-want-C-u-scroll'.)
-(defun +center-after-scroll-a (&rest _)
-  "Recenter point after an evil half-page scroll.
-Skip it within a half-window of the buffer's top or bottom edge, where
-centering can't add lines above/below point and would instead undo the
-scroll (making C-d/C-u feel stuck). Neovim's `zz' behaves the same at edges."
-  (let ((top-limit (save-excursion
-                     (goto-char (point-min))
-                     (forward-line (/ (window-body-height) 2))
-                     (point))))
-    (unless (or (<= (point) top-limit)
-                (pos-visible-in-window-p (point-max)))
-      (recenter))))
-(advice-add 'evil-scroll-down :after #'+center-after-scroll-a)
-(advice-add 'evil-scroll-up   :after #'+center-after-scroll-a)
-
-
-;;; ---- LSP (eglot): completion & imports -----------------------------------
-
-;; Corfu: pop completions up automatically as you type, with a docs popup
-;; beside the candidate (Doom leaves corfu manual-trigger by default).
-(after! corfu
-  (setq corfu-auto t
-        corfu-auto-delay 0.1
-        corfu-auto-prefix 2)
-  (corfu-popupinfo-mode +1))
-
-(after! eglot
-  ;; Let orderless fuzzy-match inside LSP completions; eglot otherwise
-  ;; restricts matching to a common prefix.
-  (add-to-list 'completion-category-overrides '(eglot (styles orderless)))
-  (add-to-list 'completion-category-overrides '(eglot-capf (styles orderless)))
-
-  ;; gopls settings:
-  ;;   usePlaceholders — fill function args as editable tab stops
-  ;;   staticcheck     — richer diagnostics
-  ;; (Completing symbols from unimported packages, and auto-adding their import,
-  ;; is always-on in modern gopls — no setting needed.)
-  (setq-default eglot-workspace-configuration
-                '(:gopls (:usePlaceholders t
-                          :staticcheck t))))
-
-;; Go: format the buffer and organize imports on every save, via gopls/eglot.
-(defun +go-eglot-organize-imports-h ()
-  "Organize Go imports through gopls before saving."
-  (when (eglot-managed-p)
-    (ignore-errors (eglot-code-action-organize-imports (point-min) (point-max)))))
-
-(add-hook! 'eglot-managed-mode-hook
-  (defun +go-eglot-on-save-setup-h ()
-    (when (derived-mode-p 'go-mode 'go-ts-mode)
-      (add-hook 'before-save-hook #'eglot-format-buffer -10 t)
-      (add-hook 'before-save-hook #'+go-eglot-organize-imports-h nil t))))
-
-
-;;; ---- Debugger (dape) keybindings -----------------------------------------
-;; IDE/VSCode-style function keys for fast stepping during a session, alongside
-;; Doom's built-in `SPC d' debugger menu.
-(defun +dape/start-or-continue ()
-  "Continue the running debug session, or start one if none is active (F5)."
-  (interactive)
-  (condition-case nil
-      (call-interactively #'dape-continue)
-    (error (call-interactively #'dape))))
-
-(when (modulep! :tools debugger)
-  (map! :leader
-        (:prefix ("d" . "debug")
-         :desc "Start / continue"  "SPC" #'+dape/start-or-continue
-         :desc "Start (choose)"    "d"   #'dape
-         :desc "Continue"          "c"   #'dape-continue
-         :desc "Step over (next)"  "n"   #'dape-next
-         :desc "Step into"         "i"   #'dape-step-in
-         :desc "Step out"          "o"   #'dape-step-out
-         :desc "Toggle breakpoint" "b"   #'dape-breakpoint-toggle
-         :desc "Remove all bkpts"  "B"   #'dape-breakpoint-remove-all
-         :desc "REPL"              "r"   #'dape-repl
-         :desc "Info"              "I"   #'dape-info
-         :desc "Quit"              "q"   #'dape-quit)))
