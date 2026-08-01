@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Busca archivos por regex en el NOMBRE y abre el elegido en el editor.
+#
+# fd ya interpreta el patrón como regex, así que igual que en search-content
+# el filtrado se delega a fd en cada tecla en vez de al matcher difuso de fzf.
+# Uso: search-files [regex-inicial]
+set -euo pipefail
+
+command -v fzf >/dev/null || { echo "search-files: hace falta fzf" >&2; exit 1; }
+
+# En Ubuntu fd se instala como fdfind
+FD=$(command -v fd || command -v fdfind || true)
+[ -n "$FD" ] || { echo "search-files: hace falta fd" >&2; exit 1; }
+
+BAT=$(command -v bat || command -v batcat || true)
+if [ -n "$BAT" ]; then
+  preview="$BAT --color=always --style=numbers -- {}"
+else
+  preview='cat -- {}'
+fi
+
+FD_CMD="$FD --type f --hidden --follow --exclude .git --color=always"
+
+if [ -n "${1-}" ]; then
+  initial="$FD_CMD -- $(printf '%q' "$1")"
+else
+  initial="$FD_CMD"
+fi
+
+file=$(
+  FZF_DEFAULT_COMMAND="$initial" fzf \
+    --ansi \
+    --disabled \
+    --query "${1-}" \
+    --bind "change:reload:$FD_CMD -- {q} || true" \
+    --preview "$preview" \
+    --preview-window 'up,60%,border-bottom' \
+    --header 'regex de fd sobre el nombre · enter abre en el editor'
+) || exit 0
+
+[ -n "$file" ] || exit 0
+exec "${EDITOR:-nvim}" -- "$file"

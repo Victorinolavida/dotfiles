@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Busca en el historial de zsh y devuelve el comando elegido.
+#
+# En zsh ya tienes Ctrl+R (fzf-history-widget); esto existe para invocarlo
+# desde un popup de tmux, donde no hay línea de edición: si se le pasa un
+# pane-id escribe el comando en ese panel sin ejecutarlo; si no, lo imprime.
+# Uso: search-history [pane-id]
+set -euo pipefail
+
+command -v fzf >/dev/null || { echo "search-history: hace falta fzf" >&2; exit 1; }
+
+hist=${HISTFILE:-$HOME/.zsh_history}
+[ -r "$hist" ] || { echo "search-history: no puedo leer $hist" >&2; exit 1; }
+
+# macOS no trae tac; su equivalente es `tail -r`
+if command -v tac >/dev/null 2>&1; then
+  reverse() { tac; }
+else
+  reverse() { tail -r; }
+fi
+
+# Con EXTENDED_HISTORY cada línea es ": <epoch>:<duración>;<comando>".
+# Se invierte para tener lo reciente arriba, y awk deduplica quedándose
+# con la aparición más nueva de cada comando.
+cmd=$(
+  sed -e 's/^: [0-9]*:[0-9]*;//' -- "$hist" \
+    | reverse \
+    | awk '!seen[$0]++' \
+    | fzf --no-sort \
+          --exact \
+          --height 100% \
+          --header 'historial de zsh · enter escribe el comando (no lo ejecuta)'
+) || exit 0
+
+[ -n "$cmd" ] || exit 0
+
+target=${1-}
+if [ -n "$target" ] && [ -n "${TMUX-}" ]; then
+  # -l = literal, para que el comando no se interprete como teclas
+  tmux send-keys -t "$target" -l -- "$cmd"
+else
+  printf '%s\n' "$cmd"
+fi

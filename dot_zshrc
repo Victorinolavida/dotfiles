@@ -14,6 +14,13 @@ plugins=(git wd zsh-bat you-should-use zsh-autosuggestions zsh-syntax-highlighti
 
 source $ZSH/oh-my-zsh.sh
 
+# Historial — va después de oh-my-zsh a propósito: lib/history.zsh de omz deja
+# SAVEHIST en 10000, así que solo persistían 10k comandos al cerrar la sesión.
+HISTSIZE=100000
+SAVEHIST=100000
+setopt HIST_IGNORE_ALL_DUPS   # una sola copia de cada comando repetido
+setopt HIST_REDUCE_BLANKS     # normaliza espacios antes de guardar
+
 # Editor
 export EDITOR="nvim"
 
@@ -72,6 +79,9 @@ alias cra="chezmoi re-add"
 # Key bindings
 bindkey -s ^o "tmux-sessionizer\n"
 bindkey '^f' fzf-file-widget
+# Ctrl+G: regex sobre el contenido de los archivos. Pisa send-break, que es
+# redundante teniendo Ctrl+C. Ctrl+R (historial) y Ctrl+T (archivos) los pone fzf.
+bindkey -s '^g' "search-content\n"
 
 # fzf
 if command -v fzf &>/dev/null; then
