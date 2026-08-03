@@ -77,7 +77,11 @@ alias viclavida="ssh -t -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7 ./
 alias cra="chezmoi re-add"
 
 # Key bindings
-bindkey -s ^o "tmux-sessionizer\n"
+# Ctrl+O es el carácter DISCARD del driver de la tty (ver `stty -a`), así que
+# con iexten activo lo consume el kernel y zle nunca lo recibe: el bindkey de
+# abajo quedaba registrado pero muerto. Se libera la tecla antes de enlazarla.
+[[ -t 0 ]] && stty discard undef 2>/dev/null
+bindkey -s '^o' "tmux-sessionizer\n"
 bindkey '^f' fzf-file-widget
 # Ctrl+G: regex sobre el contenido de los archivos. Pisa send-break, que es
 # redundante teniendo Ctrl+C. Ctrl+R (historial) y Ctrl+T (archivos) los pone fzf.
