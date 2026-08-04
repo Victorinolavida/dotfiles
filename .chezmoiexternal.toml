@@ -38,15 +38,3 @@
     type = "git-repo"
     url = "https://github.com/tmux-plugins/tpm.git"
     refreshPeriod = "168h"
-
-# Catppuccin — lo clona chezmoi y no TPM. dot_tmux.conf tiene que ejecutarlo
-# ANTES del bloque de status-right (que usa @catppuccin_status_date_time), y
-# TPM corre al final del archivo; declararlo como @plugin además del `run`
-# manual hacía que el tema se cargara dos veces. El directorio se llama `tmux`
-# porque el repo es catppuccin/tmux y esa es la ruta que espera el `run`.
-[".tmux/plugins/tmux"]
-    type = "git-repo"
-    url = "https://github.com/catppuccin/tmux.git"
-    refreshPeriod = "168h"
-    [".tmux/plugins/tmux".clone]
-        args = ["--depth", "1"]
