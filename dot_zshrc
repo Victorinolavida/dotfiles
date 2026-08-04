@@ -24,9 +24,9 @@ setopt HIST_REDUCE_BLANKS     # normaliza espacios antes de guardar
 # Editor
 export EDITOR="nvim"
 
-# Language
+# Language — solo LANG. LC_ALL pisa TODAS las categorías LC_* y no se puede
+# desactivar por partes, así que impide cosas como LC_TIME distinto al resto.
 export LANG=en_US.UTF-8
-export LC_ALL="en_US.UTF-8"
 
 # PATH
 export PATH="/usr/local/bin:$PATH"
@@ -62,7 +62,12 @@ if [ -d "$HOME/.docker/completions" ]; then
 fi
 
 # Aliases
-alias ls="eza --color --icons --tree --level=1 --group-directories-first"
+# `ls` sin --tree: eza rechaza --tree junto a -d (`ls -d dir` fallaba), y a
+# nivel 1 el árbol no aportaba nada frente a un listado normal. El árbol vive
+# ahora en `lt`, donde --level sí tiene sentido.
+alias ls="eza --color --icons --group-directories-first"
+alias ll="eza --color --icons --group-directories-first --long --git"
+alias lt="eza --color --icons --group-directories-first --tree --level=2"
 alias vim="nvim"
 alias vi="nvim"
 alias vimconfig="nvim ~/.config/nvim/"
@@ -104,5 +109,7 @@ fi
 # p10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-eval "$(direnv hook zsh)"
-eval "$(zoxide init zsh)"
+# Guardas como las del resto del archivo: si el bootstrap no logró instalar
+# alguno de los dos, sin esto cada arranque de shell escupe un error.
+command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"

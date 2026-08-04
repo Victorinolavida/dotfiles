@@ -1,0 +1,12 @@
+[user]
+	name = {{ .name }}
+	email = {{ .email }}
+	username = {{ .github_user }}
+
+[github]
+	user = {{ .github_user }}
+
+# Git ya lee ~/.config/git/ignore por defecto cuando esta clave no está puesta,
+# pero se declara explícita para que no dependa de XDG_CONFIG_HOME.
+[core]
+	excludesfile = {{ .chezmoi.homeDir }}/.config/git/ignore
