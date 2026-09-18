@@ -20,11 +20,11 @@ chezmoi init --apply --source ~/.config/dotfiles Victorinolavida
 
 ## How it works
 
-[chezmoi](https://chezmoi.io) manages symlinks and file application. On first run it also executes `run_once_install.sh.tmpl` to install all packages.
+[chezmoi](https://chezmoi.io) manages symlinks and file application. On first run it also executes `run_once_setup.sh.tmpl` to install all packages.
 
 ---
 
-## `run_once_install.sh.tmpl`
+## `run_once_setup.sh.tmpl`
 
 This script runs automatically when you first apply the dotfiles (or whenever its content changes). It bootstraps your environment end-to-end.
 
@@ -87,7 +87,7 @@ dotfiles/
 │   ├── kitty/             → ~/.config/kitty/
 │   └── yazi/              → ~/.config/yazi/
 ├── dot_local/bin/         → ~/.local/bin/  (tmux scripts)
-├── run_once_install.sh.tmpl  — package installs (runs once)
+├── run_once_setup.sh.tmpl  — package installs (runs once)
 ├── .chezmoi.toml.tmpl     — chezmoi config
 ├── .chezmoiexternal.toml  — external repos (nvim)
 └── .chezmoiignore         — files chezmoi skips
@@ -98,7 +98,7 @@ dotfiles/
 ## Configs
 
 ### Zsh
-Requires Oh My Zsh + plugins (installed by `run_once_install.sh.tmpl`).
+Requires Oh My Zsh + plugins (installed by `run_once_setup.sh.tmpl`).
 
 Plugins: `zsh-autosuggestions`, `zsh-syntax-highlighting`, `wd`, `powerlevel10k` theme.
 
@@ -109,7 +109,7 @@ Cross-platform key bindings. `os-keys.conf` is generated from a chezmoi template
 Config at `~/.config/ghostty/config`.
 
 ### Tmux
-Requires TPM. Installed by `run_once_install.sh.tmpl`. After first apply, open tmux and press `prefix + I` to install plugins.
+Requires TPM. Installed by `run_once_setup.sh.tmpl`. After first apply, open tmux and press `prefix + I` to install plugins.
 
 ### Neovim
 Config sourced from [minimal_nvim](https://github.com/Victorinolavida/minimal_nvim) via `.chezmoiexternal.toml`. chezmoi clones it automatically to `~/.config/nvim`.
@@ -137,7 +137,7 @@ OMZ wasn't installed. Remove the partial directory and re-run:
 
 ```bash
 rm -rf ~/.oh-my-zsh
-bash <(chezmoi execute-template < ~/.local/share/chezmoi/run_once_install.sh.tmpl)
+bash <(chezmoi execute-template < ~/.config/dotfiles/run_once_setup.sh.tmpl)
 chezmoi apply --force --refresh-externals=always
 ```
 

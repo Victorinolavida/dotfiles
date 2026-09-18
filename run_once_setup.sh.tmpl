@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+# chezmoi run_once script — runs once per content hash change.
+# Every step is logged ([ok]/[skip]/[err]) and failures are *not* fatal:
+# a single bad step is logged and counted, install continues, and the
+# script exits non-zero if anything failed so chezmoi re-runs it next
+# `chezmoi apply` (existing/idempotent steps are skipped thanks to the
+# `has`/`fc-list`/`fc-cache` guards).
+
+set -u
+
+has() { command -v "$1" &>/dev/null; }
+
+_fail=0
+ok()   { printf '[\e[32mok\e[0m]   %s\n' "$*"; }
+skip() { printf '[\e[90mskip\e[0m] %s\n' "$*"; }
+err()  { _fail=$((_fail + 1)); printf '[\e[31merr\e[0m]  %s\n' "$*"; }
+
+# run_step <label> <existing-check-cmd...> -- <install-cmd...>
+# Runs the install commands only when the check command fails.
+run_step() {
+  local label="$1"; shift
+  local check=() install=() sep=i
+  for a in "$@"; do
+    if [ "$a" = "--" ]; then sep=c
+    elif [ "$sep" = "i" ]; then check+=("$a")
+    else install+=("$a"); fi
+  done
+  if "${check[@]}" >/dev/null 2>&1; then
+    skip "$label (already present)"
+    return 0
+  fi
+  if "${install[@]}"; then ok "$label"; else err "$label"; fi
+}
+
+{{ if eq .chezmoi.os "darwin" -}}
+# ── macOS ─────────────────────────────────────────────────────────────────────
+run_step "Homebrew" command -v brew -- \
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+brew install \
+  git curl zsh \
+  eza bat fzf fd zoxide lazygit \
+  tmux ripgrep \
+  go \
+  neovim \
+  yazi direnv fnm
+
+brew install --cask \
+  nikitabobko/tap/aerospace \
+  ghostty \
+  font-jetbrains-mono-nerd-font \
+  font-intone-mono-nerd-font \
+  font-symbols-only-nerd-font
+
+# open Ghostty windows as separate native windows (not macOS tabs) so
+# AeroSpace can tile each one independently
+defaults write com.mitchellh.ghostty AppleWindowTabbingMode -string manual
+
+{{ else if eq .chezmoi.os "linux" -}}
+# ── Linux ─────────────────────────────────────────────────────────────────────
+run_step "apt base packages" bash -c 'has git && has unzip && has wget' -- \
+  sudo apt-get update -qq && sudo apt-get install -y git curl wget unzip zsh tmux ripgrep build-essential xclip
+
+# eza (third-party apt repo)
+run_step "eza" has eza -- bash -c '
+  sudo mkdir -p /etc/apt/keyrings
+  wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc \
+    | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+  echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" \
+    | sudo tee /etc/apt/sources.list.d/gierens.list
+  sudo apt-get update -qq && sudo apt-get install -y eza'
+
+# bat (Ubuntu ships as batcat)
+run_step "bat" bash -c 'has bat || has batcat' -- bash -c '
+  sudo apt-get install -y bat
+  if has batcat && ! has bat; then
+    mkdir -p "$HOME/.local/bin" && ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+  fi'
+
+run_step "fzf/fd/zoxide" bash -c 'has fzf && has zoxide' -- bash -c 'sudo apt-get install -y fzf fd-find zoxide'
+
+run_step "fd -> fdfind alias" bash -c 'has fd || ! has fdfind' -- bash -c '
+  mkdir -p "$HOME/.local/bin" && ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"'
+
+# lazygit
+run_step "lazygit" has lazygit -- bash -c '
+  v=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" \
+    | grep '"'"'"tag_name"'"'"' | sed '"'"'s/.*"v\(.*\)".*/\1/'"'"')
+  curl -Lo /tmp/lazygit.tar.gz \
+    "https://github.com/jesseduffield/lazygit/releases/download/v${v}/lazygit_${v}_Linux_x86_64.tar.gz"
+  tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
+  sudo install /tmp/lazygit /usr/local/bin
+  rm -f /tmp/lazygit.tar.gz'
+
+# yazi
+run_step "yazi" has yazi -- bash -c '
+  v=$(curl -s "https://api.github.com/repos/sxyazi/yazi/releases/latest" \
+    | grep '"'"'"tag_name"'"'"' | sed '"'"'s/.*"v\(.*\)".*/\1/'"'"')
+  curl -Lo /tmp/yazi.zip \
+    "https://github.com/sxyazi/yazi/releases/download/v${v}/yazi-x86_64-unknown-linux-gnu.zip"
+  unzip -o /tmp/yazi.zip -d /tmp/yazi >/dev/null
+  sudo install /tmp/yazi/yazi-x86_64-unknown-linux-gnu/yazi /usr/local/bin/yazi
+  sudo install /tmp/yazi/yazi-x86_64-unknown-linux-gnu/ya  /usr/local/bin/ya
+  rm -rf /tmp/yazi /tmp/yazi.zip'
+
+# neovim
+run_step "neovim" has nvim -- bash -c 'sudo snap install nvim --classic'
+
+# Ghostty — no official Linux package; warn only (non-fatal)
+if ! has ghostty; then
+  echo "[warn] Ghostty has no official Linux package — install manually: https://ghostty.org/download"
+fi
+
+# fnm
+run_step "fnm" has fnm -- bash -c 'curl -fsSL https://fnm.vercel.app/install | bash'
+
+# Rust
+run_step "Rust/cargo" has cargo -- bash -c '
+  sudo apt-get install -y libssl-dev pkg-config
+  curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  source "$HOME/.cargo/env"'
+
+# JetBrainsMono Nerd Font
+run_step "JetBrainsMono Nerd Font" bash -c 'fc-list | grep -qi "JetBrainsMono Nerd Font"' -- bash -c '
+  font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
+  v=$(curl -s "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest" \
+    | grep '"'"'"tag_name"'"'"' | sed '"'"'s/.*"\(v[^"]*\)".*/\1/'"'"')
+  mkdir -p "$font_dir"
+  curl -Lo /tmp/JetBrainsMono.zip \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${v}/JetBrainsMono.zip"
+  unzip -o /tmp/JetBrainsMono.zip -d "$font_dir" >/dev/null
+  rm -f /tmp/JetBrainsMono.zip
+  fc-cache -f "$font_dir" >/dev/null'
+
+# Intone Mono Nerd Font — zip asset is "IntelOneMono.zip" (renamed from
+# IntelliOne Mono; family name inside is still "Intone Mono")
+run_step "Intone Mono Nerd Font" bash -c 'fc-list | grep -qi "Intone Mono"' -- bash -c '
+  font_dir="$HOME/.local/share/fonts/IntoneMonoNerdFont"
+  v=$(curl -s "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest" \
+    | grep '"'"'"tag_name"'"'"' | sed '"'"'s/.*"\(v[^"]*\)".*/\1/'"'"')
+  mkdir -p "$font_dir"
+  curl -Lo /tmp/IntelOneMono.zip \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${v}/IntelOneMono.zip"
+  unzip -o /tmp/IntelOneMono.zip -d "$font_dir" >/dev/null
+  rm -f /tmp/IntelOneMono.zip
+  fc-cache -f "$font_dir" >/dev/null'
+
+# Symbols Nerd Font — used by nvim nerd-icons and terminal icon plugins
+run_step "Symbols Nerd Font" bash -c 'fc-list | grep -qi "Symbols Nerd Font"' -- bash -c '
+  font_dir="$HOME/.local/share/fonts/NerdFontsSymbolsOnly"
+  v=$(curl -s "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest" \
+    | grep '"'"'"tag_name"'"'"' | sed '"'"'s/.*"\(v[^"]*\)".*/\1/'"'"')
+  mkdir -p "$font_dir"
+  curl -Lo /tmp/NerdFontsSymbolsOnly.zip \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${v}/NerdFontsSymbolsOnly.zip"
+  unzip -o /tmp/NerdFontsSymbolsOnly.zip -d "$font_dir" >/dev/null
+  rm -f /tmp/NerdFontsSymbolsOnly.zip
+  fc-cache -f "$font_dir" >/dev/null'
+
+{{ end -}}
+
+# ── Oh My Zsh (all platforms) ─────────────────────────────────────────────────
+run_step "Oh My Zsh" bash -c 'test -f "$HOME/.oh-my-zsh/oh-my-zsh.sh"' -- \
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+# ── Switch default shell to zsh ───────────────────────────────────────────────
+if command -v zsh >/dev/null 2>&1 && [ "$SHELL" != "$(command -v zsh)" ]; then
+  if ! grep -qx "$(command -v zsh)" /etc/shells; then
+    echo "$(command -v zsh)" | sudo tee -a /etc/shells
+  fi
+  sudo chsh -s "$(command -v zsh)" "$(id -un)"
+  ok "default shell switched to zsh — log out and back in to apply"
+fi
+
+# ── oh-my-zsh plugins & theme (managed via .chezmoiexternal.toml) ──────────────
+
+# ── Tmux Plugin Manager ────────────────────────────────────────────────────────
+run_step "Tmux Plugin Manager" bash -c 'test -d "$HOME/.tmux/plugins/tpm"' -- \
+  git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+
+# Summarize failures: exit non-zero so chezmoi re-runs this script on
+# the next `chezmoi apply` (only successful runs are marked as done).
+if [ "$_fail" -gt 0 ]; then
+  printf '\n[\e[31merr\e[0m] %d step(s) failed — will re-run on next chezmoi apply\n' "$_fail"
+  exit 1
+fi
+printf '[\e[32mok\e[0m] bootstrap complete\n'
