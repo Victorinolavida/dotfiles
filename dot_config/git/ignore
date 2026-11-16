@@ -40,3 +40,5 @@ vendor/
 # Logs / temp
 *.log
 *.tmp
+
+**/.claude/settings.local.json

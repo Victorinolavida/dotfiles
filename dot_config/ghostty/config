@@ -3,7 +3,11 @@
 # --- appearance ---
 font-family = JetBrainsMono Nerd Font
 font-size = 16
-theme = Catppuccin Mocha
+# Igual que el tema de tmux y el de nvim. Ghostty lo trae de serie, no hace
+# falta instalarlo: `ghostty +list-themes` lista los 463 disponibles.
+# background #181616 / foreground #c5c9c5, los mismos valores exactos que usa
+# el tema de tmux, así que el fondo del terminal y el de tmux no se notan.
+theme = Kanagawa Dragon
 background-opacity = 1.0
 cursor-style = block
 cursor-style-blink = false
