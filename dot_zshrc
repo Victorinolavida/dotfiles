@@ -9,20 +9,31 @@ fi
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting wd)
+# zsh-syntax-highlighting va de último: debe cargarse después del resto
+plugins=(git wd you-should-use zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
+
+# Historial — va después de oh-my-zsh a propósito: lib/history.zsh de omz deja
+# SAVEHIST en 10000, así que solo persistían 10k comandos al cerrar la sesión.
+HISTSIZE=100000
+SAVEHIST=100000
+setopt HIST_IGNORE_ALL_DUPS   # una sola copia de cada comando repetido
+setopt HIST_REDUCE_BLANKS     # normaliza espacios antes de guardar
 
 # Editor
 export EDITOR="nvim"
 
-# Language
+# Language — solo LANG. LC_ALL pisa TODAS las categorías LC_* y no se puede
+# desactivar por partes, así que impide cosas como LC_TIME distinto al resto.
 export LANG=en_US.UTF-8
-export LC_ALL="en_US.UTF-8"
 
 # PATH
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+
+# Doom Emacs CLI (doom sync/install/doctor/upgrade)
+export PATH="$HOME/.config/emacs/bin:$PATH"
 
 # Go
 export GOPATH=$HOME/go
@@ -51,18 +62,22 @@ if [ -d "$HOME/.docker/completions" ]; then
 fi
 
 # Aliases
-alias ls="eza --color --icons --tree --level=1 --group-directories-first"
+# `ls` sin --tree: eza rechaza --tree junto a -d (`ls -d dir` fallaba), y a
+# nivel 1 el árbol no aportaba nada frente a un listado normal. El árbol vive
+# ahora en `lt`, donde --level sí tiene sentido.
+alias ls="eza --color --icons --group-directories-first"
+alias ll="eza --color --icons --group-directories-first --long --git"
+alias lt="eza --color --icons --group-directories-first --tree --level=2"
+alias ld="eza --color --icons --group-directories-first --only-dirs"
 alias vim="nvim"
 alias vi="nvim"
 alias vimconfig="nvim ~/.config/nvim/"
 alias zshconfig="nvim ~/.zshrc"
 alias reloadconfig="source ~/.zshrc"
 alias reloadtmux="tmux source ~/.tmux.conf"
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  alias cat="batcat"
-else
-  alias cat="bat"
-fi
+alias bcat="bat --style=plain --paging=never"
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+export MANROFFOPT="-c"
 alias clear='clear && printf "\e[3J"'
 alias air='$(go env GOPATH)/bin/air'
 alias droplet="ssh -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7"
@@ -70,8 +85,15 @@ alias viclavida="ssh -t -i ~/.ssh/id_rsa_greenligtht greenlight@137.184.184.7 ./
 alias cra="chezmoi re-add"
 
 # Key bindings
-bindkey -s ^o "tmux-sessionizer\n"
+# Ctrl+O es el carácter DISCARD del driver de la tty (ver `stty -a`), así que
+# con iexten activo lo consume el kernel y zle nunca lo recibe: el bindkey de
+# abajo quedaba registrado pero muerto. Se libera la tecla antes de enlazarla.
+[[ -t 0 ]] && stty discard undef 2>/dev/null
+bindkey -s '^o' "tmux-sessionizer\n"
 bindkey '^f' fzf-file-widget
+# Ctrl+G: regex sobre el contenido de los archivos. Pisa send-break, que es
+# redundante teniendo Ctrl+C. Ctrl+R (historial) y Ctrl+T (archivos) los pone fzf.
+bindkey -s '^g' "search-content\n"
 
 # fzf
 if command -v fzf &>/dev/null; then
@@ -90,14 +112,7 @@ fi
 # p10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Yazi - change directory on exit (named ycd to avoid shadowing yazi's `ya` CLI)
-function ycd() {
-  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-  yazi "$@" --cwd-file="$tmp"
-  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-    builtin cd -- "$cwd"
-  fi
-  rm -f -- "$tmp"
-}
-eval "$(direnv hook zsh)"
-eval "$(zoxide init zsh)"
+# Guardas como las del resto del archivo: si el bootstrap no logró instalar
+# alguno de los dos, sin esto cada arranque de shell escupe un error.
+command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Busca por regex DENTRO de los archivos y abre el resultado en el editor.
+#
+# El regex se refina en vivo: cada tecla relanza ripgrep (modo reload de fzf),
+# así que quien filtra es rg con su regex real, no el matcher difuso de fzf.
+# Uso: search-content [regex-inicial]
+set -euo pipefail
+
+for c in rg fzf; do
+  command -v "$c" >/dev/null || { echo "search-content: hace falta $c" >&2; exit 1; }
+done
+
+# En Ubuntu el binario se llama batcat mientras no exista el symlink
+BAT=$(command -v bat || command -v batcat || true)
+if [ -n "$BAT" ]; then
+  preview="$BAT --color=always --style=numbers --highlight-line {2} -- {1}"
+  preview_window='up,60%,border-bottom,+{2}+3/3,~3'
+else
+  preview='sed -n "{2}p" -- {1}'
+  preview_window='up,40%,border-bottom'
+fi
+
+RG="rg --column --line-number --no-heading --color=always --smart-case"
+
+# Sin regex inicial no se lanza rg: `rg ""` casaría todas las líneas de todos
+# los archivos, que en un repo grande es tirar trabajo a la basura.
+if [ -n "${1-}" ]; then
+  initial="$RG -- $(printf '%q' "$1")"
+else
+  initial="true"
+fi
+
+selection=$(
+  FZF_DEFAULT_COMMAND="$initial" fzf \
+    --ansi \
+    --disabled \
+    --query "${1-}" \
+    --bind "change:reload:$RG -- {q} || true" \
+    --delimiter : \
+    --preview "$preview" \
+    --preview-window "$preview_window" \
+    --header 'regex de ripgrep · enter abre en el editor'
+) || exit 0
+
+[ -n "$selection" ] || exit 0
+
+# formato de rg: archivo:línea:columna:texto
+file=${selection%%:*}
+rest=${selection#*:}
+line=${rest%%:*}
+
+editor=${EDITOR:-nvim}
+case "$(basename "$editor")" in
+  nvim|vim|vi|nano) exec "$editor" "+$line" -- "$file" ;;
+  *)                exec "$editor" "$file" ;;
+esac

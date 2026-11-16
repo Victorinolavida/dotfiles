@@ -1,15 +1,6 @@
 # Repo meta — not managed as dotfiles
-bin
-scripts
-assets
-notes
-plugins
-init.sh
-install.sh
 README.md
-CHEATSHEET.md
-.gitmodules
+.gitignore
 
-# nvim submodule — managed separately via .chezmoiexternal.toml
-nvim
-dot_config/nvim
+# Symlink dropped in the repo root by accident, not a dotfile
+Emacs.app
