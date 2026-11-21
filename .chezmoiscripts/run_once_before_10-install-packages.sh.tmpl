@@ -18,7 +18,7 @@ fi
 
 log "Instalando paquetes con brew"
 brew install \
-  git curl zsh tmux \
+  git curl zsh tmux python \
   eza bat fzf fd ripgrep zoxide direnv \
   lazygit neovim \
   go fnm
@@ -75,17 +75,17 @@ case "$FAMILY" in
   debian)
     log "Actualizando índices de apt"
     sudo apt-get update -qq
-    pm_install git curl wget unzip zsh tmux ripgrep build-essential xclip
+    pm_install git curl wget unzip zsh tmux ripgrep build-essential xclip python3 python3-pip
     # bat y fd se llaman batcat/fdfind aquí; eza sólo está en 24.04+
     pm_try fzf fd-find zoxide direnv bat golang-go eza
     ;;
   arch)
-    pm_install git curl wget unzip zsh tmux ripgrep base-devel xclip
+    pm_install git curl wget unzip zsh tmux ripgrep base-devel xclip python python-pip
     pm_try fzf fd zoxide direnv bat eza go neovim lazygit fnm \
            ttf-jetbrains-mono-nerd
     ;;
   fedora)
-    pm_install git curl wget unzip zsh tmux ripgrep xclip
+    pm_install git curl wget unzip zsh tmux ripgrep xclip python3 python3-pip
     pm_try fzf fd-find zoxide direnv bat eza golang neovim lazygit \
            @development-tools
     ;;
@@ -167,6 +167,16 @@ if has fc-list && ! fc-list | grep -qi "JetBrainsMono Nerd Font"; then
 fi
 
 {{ end -}}
+
+# tmux-window-name ejecuta su script con /usr/bin/env python3.
+if ! python3 -c 'import libtmux' >/dev/null 2>&1; then
+  log "Instalando libtmux para tmux-window-name"
+  if python3 -m pip install --help | grep -- '--break-system-packages' >/dev/null; then
+    python3 -m pip install --user --break-system-packages libtmux
+  else
+    python3 -m pip install --user libtmux
+  fi
+fi
 
 # ─── Oh My Zsh (todas las plataformas) ────────────────────────────────────────
 # Va aquí, en un script "before", porque el instalador se niega a correr si
